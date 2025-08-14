@@ -56,7 +56,7 @@
     movri r2,200
     call add_two_i64
     ```
-    同样，支持块内部嵌套块，前套的块不存在独立的ret指令，ret指令属于大父块，不建议多层嵌套
+    同样，支持块内部嵌套块，嵌套的块不存在独立的ret指令，ret指令属于大父块，不建议多层嵌套
     ```asm
     block the_block
     call .son_block
@@ -73,7 +73,7 @@
       end block .the_block_ret
     end block the_block
     ```
-    再包含不分汇编指令的同时，我们同样支持部分高级语言的语法
+    再包含部分汇编指令的同时，我们同样支持部分高级语言的语法
     ```asm
     cmprr [r0],[r1],<=          #对于r0和r1目前指向的堆内存地址进行取值后进行比较,第三位为比较符号（==,!=,<,<=,>,>=）
     #这个示例就是 r0 <= r1 ? call the_cmp_is_true : call the_cmp_is_false
@@ -95,5 +95,6 @@
 ---
 
 ## 快速开始
+
 
 ### 安装
