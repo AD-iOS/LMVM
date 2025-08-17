@@ -1,4 +1,4 @@
-# LMVM - Lamina 虚拟机运行时 （未完工状态）
+# LMVM - Lamina 虚拟机运行时 （弃用）
 
 <!-- [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) -->
 
@@ -98,3 +98,4 @@
 
 
 ### 安装
+
