@@ -54,9 +54,9 @@ void VirtualMachine::execute(Op& op) {
             break;
         }
         case OpCode::MOVMR: {
-            const auto r = op.data[0];
             uint64_t heapAddr;
-            memcpy(&heapAddr, op.data.data() + 1, sizeof(uint64_t));
+            memcpy(&heapAddr, op.data.data(), sizeof(uint64_t));
+            const auto r = op.data[8];
 
             heapManager->updateObject(heapAddr,&reg[r]);
             break;
@@ -220,6 +220,7 @@ void VirtualMachine::execute(Op& op) {
             Handler::vmcallTable[CallNum](this);
             break;
         }
+
         default: {
 
         }

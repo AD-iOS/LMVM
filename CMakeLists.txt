@@ -22,7 +22,11 @@ add_executable(lmvm main.cpp
         vm/op/OpCode.cpp
         vm/op/Loader.cpp
         vm/call/handler.cpp
-        vm/call/io.cpp)
+        vm/call/io.cpp
+)
 
-file(GLOB IRC_SOURCE "ir/*.cpp")
-add_executable(lmlc ${IRC_SOURCE})
+add_executable(lmlc
+        ir/main.cpp
+        ir/ir_token.cpp
+        ir/ir_generator.cpp
+        ir/ir_generator.h)
