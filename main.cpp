@@ -23,6 +23,6 @@ int main(int argc, char* argv[]) {
     try{
         vm.run(entry);
     }catch (const LmError &e){
-        std::cout << e.what() << std::endl;
+        std::cout << "Error: " << e.what() << std::endl;
     }
 }

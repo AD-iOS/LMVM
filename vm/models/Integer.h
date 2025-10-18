@@ -31,7 +31,7 @@ public:
     uint64_t to_ctype(){
         return *reinterpret_cast<uint64_t *>(m_value);
     }
-    void update_value(void* value)override {
-        std::memcpy(m_value, value, 8);
+    void update_value(void* value_ptr)override {
+        std::memcpy(m_value, value_ptr, 8);
     }
 };

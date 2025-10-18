@@ -7,11 +7,7 @@ HeapManager::HeapManager(size_t initialSize) : heapSize(initialSize), usedSize(0
     freeList[0] = true;             // 整个堆初始为空闲
 }
 
-HeapManager::~HeapManager() {
-    for (const auto& c: heap) {
-        delete c;
-    }
-}
+HeapManager::~HeapManager() = default;
 
 size_t HeapManager::allocate(size_t size) {
     for (const auto& [start, isFree] : freeList) {
@@ -49,28 +45,27 @@ void HeapManager::deallocate(size_t address) {
         throw LmError("Invalid heap address");
     }
     
-    if (freeList.contains(address) && !freeList[address]) {
+    if (freeList.find(address) != freeList.end() && !freeList[address]) {
         freeList[address] = true;  // 标记为空闲
-        delete heap[address];
         usedSize--;
     }
 }
 
-size_t HeapManager::storeObject(LmObject* obj) {
+size_t HeapManager::storeObject(std::shared_ptr<LmObject> obj) {
     size_t address = allocate(1);  // 每个对象占用一个槽位
     heap[address] = obj;
     return address;
 }
 
-LmObject* HeapManager::loadObject(size_t address) {
-    if (address >= heapSize || !freeList.contains(address) || freeList[address]) {
+std::shared_ptr<LmObject> HeapManager::loadObject(size_t address) {
+    if (address >= heapSize || freeList.find(address) == freeList.end() || freeList[address]) {
         throw LmError("Invalid heap address or address is free");
     }
     return heap[address];
 }
 
 void HeapManager::updateObject(size_t address, void* obj) {
-    if (address >= heapSize || !freeList.contains(address) || freeList[address]) {
+    if (address >= heapSize || freeList.find(address) == freeList.end() || freeList[address]) {
         throw LmError("Invalid heap address or address is free");
     }
     heap[address]->update_value(obj);

@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#pragma region LMVM_VERSION
 #include <iostream>
 
 #define PRINT(REG) std::cout << REG << '\n'

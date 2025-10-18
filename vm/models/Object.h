@@ -3,11 +3,13 @@
 //
 
 #pragma once
+#include <memory>
 
 enum class ObjectType {
     STRING,
     INTEGER,
-    FLOAT
+    FLOAT,
+    CALL_NATIVE
 };
 class LmObject {
 
@@ -17,5 +19,5 @@ public:
 
     ObjectType m_type;
 
-    virtual void update_value(void* value){}
+    virtual void update_value(void* obj){}
 };

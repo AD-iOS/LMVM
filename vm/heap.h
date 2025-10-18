@@ -1,13 +1,12 @@
 ﻿#pragma once
 #include <vector>
-#include <cstdint>
 #include <unordered_map>
 #include <memory>
 #include "models/models.h"
 
 class HeapManager {
 private:
-    std::vector<LmObject*> heap;  // 堆存储
+    std::vector<std::shared_ptr<LmObject>> heap;  // 堆存储
     std::unordered_map<size_t, bool> freeList;    // 空闲列表
     size_t heapSize;                              // 堆大小
     size_t usedSize;                              // 已使用大小
@@ -23,13 +22,13 @@ public:
     void deallocate(size_t address);
     
     // 存储对象到堆
-    size_t storeObject(LmObject* obj);
+    size_t storeObject(std::shared_ptr<LmObject> obj);
     
     // 从堆加载对象
-    LmObject* loadObject(size_t address);
+    std::shared_ptr<LmObject> loadObject(size_t address);
 
     // 更改对象
-    void updateObject(size_t address, void *obj);
+    void updateObject(size_t address, void* obj);
     
     // 垃圾回收（简单标记）
     void garbageCollect();

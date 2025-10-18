@@ -3,8 +3,11 @@
 //
 
 #include "vm.h"
+#include "models/Integer.h"
+#include "models/String.h"
 #include "op/OpCode.h"
 #include "call/handler.h"
+#include <cstdint>
 #include <iostream>
 #include <memory>
 
@@ -30,7 +33,7 @@ void VirtualMachine::execute(Op& op) {
             memcpy(&heapAddr, op.data.data() + 1, sizeof(uint64_t));
             const auto obj = heapManager->loadObject(heapAddr);
 
-            if (const auto intObj = dynamic_cast<LmInteger*>(obj)) {
+            if (const auto intObj = std::dynamic_pointer_cast<LmInteger>(obj)) {
                 reg[r1] = intObj->to_ctype();
             }
             break;
@@ -86,7 +89,7 @@ void VirtualMachine::execute(Op& op) {
             memcpy(&heapAddr, op.data.data() + 1, sizeof(uint64_t));
             auto obj = heapManager->loadObject(heapAddr);
 
-            if (auto intObj = dynamic_cast<LmInteger*>(obj)) {
+            if (auto intObj = std::dynamic_pointer_cast<LmInteger>(obj)) {
                 reg[r] += intObj->to_ctype();
             }
             break;
@@ -112,7 +115,7 @@ void VirtualMachine::execute(Op& op) {
             memcpy(&heapAddr, op.data.data() + 1, sizeof(uint64_t));
             const auto obj = heapManager->loadObject(heapAddr);
 
-            if (auto intObj = dynamic_cast<LmInteger*>(obj)) {
+            if (auto intObj = std::dynamic_pointer_cast<LmInteger>(obj)) {
                 reg[r] -= intObj->to_ctype();
             }
             break;
@@ -137,7 +140,7 @@ void VirtualMachine::execute(Op& op) {
             uint64_t heapAddr;
             memcpy(&heapAddr, op.data.data() + 1, sizeof(uint64_t));
             const auto obj = heapManager->loadObject(heapAddr);
-            if (auto intObj = dynamic_cast<LmInteger*>(obj)) {
+            if (auto intObj = std::dynamic_pointer_cast<LmInteger>(obj)) {
                 reg[r] *= intObj->to_ctype();
             }
             break;
@@ -160,7 +163,7 @@ void VirtualMachine::execute(Op& op) {
             uint64_t heapAddr;
             memcpy(&heapAddr, op.data.data() + 1, sizeof(uint64_t));
             const auto obj = heapManager->loadObject(heapAddr);
-            if (const auto intObj = dynamic_cast<LmInteger*>(obj)) {
+            if (const auto intObj = std::dynamic_pointer_cast<LmInteger>(obj)) {
                 if (const auto val = intObj->to_ctype(); val != 0) reg[r] /= val;
             }
             break;
@@ -170,17 +173,13 @@ void VirtualMachine::execute(Op& op) {
             int64_t imm;
             memcpy(&imm, op.data.data() + 1, sizeof(int64_t));
 
-            reg[r] = heapManager->storeObject(new LmInteger(imm));  // 返回堆地址
+            reg[r] = heapManager->storeObject(std::make_shared<LmInteger>(imm));  // 返回堆地址
             break;
         }
         case OpCode::NEWSTR: {
             const auto r = op.data[0];
 
-            reg[r] = heapManager->storeObject(
-                new LmString(
-                    reinterpret_cast<char*>(
-                        op.data.data()+1
-                        )));
+            reg[r] = heapManager->storeObject(std::make_shared<LmString>(reinterpret_cast<char*>(op.data.data()+1)));
             break;
         }
         case OpCode::CALL: {
