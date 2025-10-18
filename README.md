@@ -8,7 +8,7 @@
   .\lmvm.exe
   ```
 - [架构设计]<br>
-  采用了类Intel X86指令集，基于Rust语言实现。<br>
+  采用了类Intel X86指令集<br>
   借鉴了AT&T指令后缀，使用immu(i),memory(m),register(r)来表示指令参数<br>
   分为双后缀（例如movrr,movrm）和单后缀指令（例如addr,addi）<br>
   采用block块指令结构，指令集由指令块组成<br>
@@ -24,6 +24,7 @@
 - ✅ **可扩展**：模块化指令集架构
 
 ---
+
 
 
 
