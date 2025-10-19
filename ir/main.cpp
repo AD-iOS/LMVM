@@ -7,9 +7,9 @@
 #include "ir_token.h"
 
 int main(int argc,char *argv[]) {
-    if (argc < 2) {
+    if (argc < 3) {
         std::cout<<"Usage:\n";
-        std::cout<<"./ir [ir_file]\n";
+        std::cout<<"./ir [ir_file].lmi [bc_file].lmc\n";
         return 0;
     }
     std::ifstream file(argv[1]);
@@ -27,5 +27,4 @@ int main(int argc,char *argv[]) {
         std::cout << f << std::endl;
     }
     gener.saveToFile(argv[2]);
-
 }

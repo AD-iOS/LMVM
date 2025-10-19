@@ -86,7 +86,7 @@ namespace ir {
                 else if (token.value == "sub") gen_subr(); // sub 别名
                 else if (token.value == "subr") gen_subr();
                 else if (token.value == "subm") gen_subm();
-                else if (token.value == "subi") gen_subm();
+                else if (token.value == "subi") gen_subi();
                 else if (token.value == "mul") gen_mulr(); // mul 别名
                 else if (token.value == "mulr") gen_mulr();
                 else if (token.value == "mulm") gen_mulm();
