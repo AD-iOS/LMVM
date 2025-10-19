@@ -23,5 +23,6 @@ fib.base:
 start:
     movri r3, 30
     call fib
-    # 返回数据在r3, vmcall参数也在r3，所不需要移动
+
+    movrr r3, r0
     vmcall 2 #exit
