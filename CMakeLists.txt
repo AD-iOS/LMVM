@@ -9,7 +9,8 @@ else()
 set(CMAKE_CXX_FLAGS "-O3 -flto")
 endif()
 
-add_executable(lmvm main.cpp
+add_executable(lmvm 
+        main.cpp
         vm/vm.cpp
 
         vm/models/Object.cpp
@@ -21,6 +22,7 @@ add_executable(lmvm main.cpp
 
         vm/op/OpCode.cpp
         vm/op/Loader.cpp
+        
         vm/call/handler.cpp
         vm/call/io.cpp
 )
