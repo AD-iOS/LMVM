@@ -19,6 +19,7 @@ class VirtualMachine {
 
     std::vector<uint64_t> stack;
     size_t sp;
+    int64_t cmp_flag{};
 
     inline void execute(Op& op);
 public:

@@ -7,7 +7,7 @@
 #include <chrono>
 
 
-int main(int argc, char *argv[]) {
+int main(char *argv[]) {
     if (argc < 2){
         std::cout << "Usage: " << argv[0] << " [options] <file> [args]\n";
         format_out_version();

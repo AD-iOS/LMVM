@@ -1,10 +1,6 @@
 %entry id
 
-mov r1, 0
-add r1, 2
-
 id:
-    add sp,10
+    newstr r3 "HelloWorld\n\0"
+    vmcall 0
 
-    mov [sp-10],0
-    sub sp, 10

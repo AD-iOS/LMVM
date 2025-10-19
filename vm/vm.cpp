@@ -213,6 +213,66 @@ void VirtualMachine::execute(Op& op) {
             }
             break;
         }
+        case OpCode::CMP: {
+            const auto r1 = op.data[0];
+            const auto r2 = op.data[1];
+            cmp_flag = std::bit_cast<int64_t>(reg[r1]) - std::bit_cast<int64_t>(reg[r2]);
+            break;
+        }
+        case OpCode::JMP: {
+            uint64_t mem;
+            memcpy(&mem, op.data.data() , sizeof(uint64_t));
+            pc = mem - 1;
+            break;
+        }
+        case OpCode::JE: {
+            if (cmp_flag == 0) {
+                uint64_t mem;
+                memcpy(&mem, op.data.data() , sizeof(uint64_t));
+                pc = mem - 1;
+            }
+            break;
+        }
+        case OpCode::JNE: {
+            if (cmp_flag != 0) {
+                uint64_t mem;
+                memcpy(&mem, op.data.data() , sizeof(uint64_t));
+                pc = mem - 1;
+            }
+            break;
+        }
+        case OpCode::JL: {
+            if (cmp_flag < 0) {
+                uint64_t mem;
+                memcpy(&mem, op.data.data() , sizeof(uint64_t));
+                pc = mem - 1;
+            }
+            break;
+        }
+        case OpCode::JLE: {
+            if (cmp_flag <= 0) {
+                uint64_t mem;
+                memcpy(&mem, op.data.data() , sizeof(uint64_t));
+                pc = mem - 1;
+            }
+            break;
+        }
+        case OpCode::JG: {
+            if (cmp_flag > 0) {
+                uint64_t mem;
+                memcpy(&mem, op.data.data() , sizeof(uint64_t));
+                pc = mem - 1;
+            }
+            break;
+        }
+        case OpCode::JGE: {
+            if (cmp_flag >= 0) {
+                uint64_t mem;
+                memcpy(&mem, op.data.data() , sizeof(uint64_t));
+                pc = mem - 1;
+            }
+            break;
+        }
         case OpCode::VMCALL: {
             uint16_t CallNum;
             memcpy(&CallNum, op.data.data(), sizeof(uint16_t));

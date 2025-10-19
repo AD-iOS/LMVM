@@ -27,7 +27,7 @@ namespace ir {
         "newi","newstr",
 
         "print",
-        ".entry"
+        "vmcall"
     };
     std::vector<std::string> Lexer::macros = {
         "entry"
@@ -36,7 +36,7 @@ namespace ir {
 
 
 
-// 将Token类型转换为可读字符串
+// Token转为字符串(DEBUG)
 std::string Token::toString() const {
     switch(type) {
         case TokenType::OPCODE: return "OPCODE";
@@ -46,7 +46,6 @@ std::string Token::toString() const {
         case TokenType::COMMENT: return "COMMENT";
         case TokenType::END: return "END_OF_FILE";
         case TokenType::UNKNOWN: return "UNKNOWN";
-        // 运算符和分隔符
         case TokenType::COMMA: return "COMMA";
         case TokenType::COLON: return "COLON";
         case TokenType::LEFT_BRACKET: return "LEFT_BRACKET";
@@ -57,6 +56,7 @@ std::string Token::toString() const {
         case TokenType::DIV: return "DIV";
         case TokenType::SP_REG: return "SP_REG";
         case TokenType::MACRO: return "MACRO";
+        case TokenType::STR: return "STR";
         default: return "UNKNOWN";
     }
 }
@@ -75,21 +75,18 @@ char Lexer::currentChar()const {
 // 前进到下一个字符，并更新行列号信息
 void Lexer::nextChar() {
     if (pos < length) {
-        // 统一处理：所有字符前进都会增加列号，包括换行符（但换行符本身会被跳过而不作为Token）
         currentColumn++;
         pos++;
     }
 }
 
-// 跳过空白字符（包括空格、制表符、换行符）
+// 跳过空白字符
 void Lexer::skipWhitespace() {
     while (pos < length && std::isspace(currentChar())) {
-        // 如果是换行符，需要重置列号并增加行号
         if (currentChar() == '\n') {
             currentLine++;
-            currentColumn = 0; // 下一个字符将位于新行的第1列，所以这里先设为0
+            currentColumn = 0;
         }
-        // 移动到下一个字符
         pos++;
         currentColumn = (currentChar() == '\n') ? 0 : currentColumn + 1;
     }
@@ -97,20 +94,20 @@ void Lexer::skipWhitespace() {
 
 // 核心函数：获取下一个Token
 Token Lexer::getNextToken() {
-    // 1. 跳过所有空白字符
+    // 跳过所有空白字符
     skipWhitespace();
 
-    // 2. 检查是否已到达源代码末尾
+    // 检查是否已到达源代码末尾
     if (pos >= length) {
         return Token(TokenType::END, "", currentLine, currentColumn);
     }
 
     // 记录当前Token开始的位置
-    int tokenLine = currentLine;
-    int tokenColumn = currentColumn;
-    char ch = currentChar();
+    const auto tokenLine = currentLine;
+    const auto tokenColumn = currentColumn;
+    const char ch = currentChar();
 
-    // 3. 识别注释
+    // 识别注释
     if (ch == '#') {
         std::string comment;
         while (pos < length && currentChar() != '\n') {
@@ -120,19 +117,37 @@ Token Lexer::getNextToken() {
         return Token(TokenType::COMMENT, comment, tokenLine, tokenColumn);
     }
 
+    //字符串
+    if (ch == '"') {
+        std::string comment;
+        while (true) {
+            nextChar();
+            if (currentChar() == '"') {
+                nextChar();
+                break;
+            }
+            if (currentChar() == EOF || currentChar() == '\n') {
+                std::cerr << "Error: Unclosed string literal at "
+                     << tokenLine << ":" << tokenColumn << " `" << comment << "`\n";
+                break;
+            }
+            comment += currentChar();
+        }
 
+        return Token(TokenType::STR, comment, tokenLine, tokenColumn);
+    }
 
-    // 5. 识别数字（纯十进制）
+    // 识别数字（仅十进制）
     if (std::isdigit(ch)) {
         std::string value;
-        while (pos < length && std::isdigit(currentChar())) {
+        while (pos < length && std::isdigit(currentChar()) ) {
             value += currentChar();
             nextChar();
         }
         return Token(TokenType::NUM, value, tokenLine, tokenColumn);
     }
 
-    // 6. 识别单个字符的运算符和分隔符
+    // 识别单个字符的运算符和分隔符
     switch (ch) {
         case ',': nextChar(); return Token(TokenType::COMMA, ",", tokenLine, tokenColumn);
         case ':': nextChar(); return Token(TokenType::COLON, ":", tokenLine, tokenColumn);
@@ -156,7 +171,7 @@ Token Lexer::getNextToken() {
             it != macros.end() && *it == value)
         return Token(TokenType::MACRO, value, tokenLine, tokenColumn);
     }
-    // 4. 识别操作码或寄存器（以字母开头）
+    //  识别操作码或寄存器（以字母开头）
     if (std::isalpha(ch)) {
         std::string value;
         while (pos < length && (
@@ -201,7 +216,7 @@ Token Lexer::getNextToken() {
         // 不满足条件，则认为是标志
         return Token(TokenType::IDENT, value, tokenLine, tokenColumn);
     }
-    // 7. 无法识别的字符
+    //  无法识别的字符
     std::string unknown(1, ch);
     nextChar();
     return Token(TokenType::UNKNOWN, unknown, tokenLine, tokenColumn);

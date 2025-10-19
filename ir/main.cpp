@@ -1,6 +1,9 @@
 #include <iostream>
 #include <fstream>
 #include <iterator>
+#include <ranges>
+
+#include "ir_generator.h"
 #include "ir_token.h"
 
 int main(int argc,char *argv[]) {
@@ -15,12 +18,14 @@ int main(int argc,char *argv[]) {
         return 1;
     }
     auto str = std::string(std::istreambuf_iterator<char>(file),std::istreambuf_iterator<char>());
-    std::cout << str << '\n';
-
+    file.close();
     ir::Lexer lexer(str);
     auto tokens = lexer.tokenize();
-    for (auto token : tokens) {
-        std::cout << token.value << "\t:\t" << token.toString() << '\n';
+    ir::Generator gener(tokens);
+    gener.build();
+    for (const auto &f: gener.errs | std::views::keys) {
+        std::cout << f << std::endl;
     }
-    file.close();
+    gener.saveToFile(argv[2]);
+
 }

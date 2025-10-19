@@ -10,7 +10,7 @@ namespace ir {
         END, REG, SP_REG, IDENT, NUM, UNKNOWN, OPCODE, COMMENT,
 
         COMMA, COLON, LEFT_BRACKET, RIGHT_BRACKET,
-        PLUS, MINUS, MUL, DIV, MACRO
+        PLUS, MINUS, MUL, DIV, MACRO, STR
     };
 
     struct Token {
@@ -27,21 +27,17 @@ namespace ir {
 
         Token():type(TokenType::END),value({}),line(0),column(0){}
 
-        std::string toString() const;
+        [[nodiscard]] std::string toString() const;
     };
 
     class Lexer {
     public:
         static std::vector<std::string> ops;
         static std::vector<std::string> macros;
-        Lexer(std::string& source);
+        explicit Lexer(std::string& source);
         std::vector<Token> tokenize();
-        std::string parse_comment();
-
-
-
     private:
-        char currentChar() const;
+        [[nodiscard]] char currentChar() const;
         void nextChar();
         void skipWhitespace();
         Token getNextToken();

@@ -29,7 +29,7 @@ bool Loader::check_header() {
 Op Loader::load_op() { 
     Op op;
     op.op = static_cast<OpCode>(m_file.get());
-    const auto data_size = static_cast<size_t>(m_file.get());
+    const auto data_size = m_file.get();
     op.data.resize(data_size);
     m_file.read(reinterpret_cast<char*>(op.data.data()), data_size);
 
