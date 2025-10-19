@@ -7,7 +7,7 @@
 #include <chrono>
 
 
-int main(char *argv[]) {
+int main(int argc,char *argv[]) {
     if (argc < 2){
         std::cout << "Usage: " << argv[0] << " [options] <file> [args]\n";
         format_out_version();
@@ -21,9 +21,7 @@ int main(char *argv[]) {
     VirtualMachine vm(code);
     try{
         auto start = std::chrono::high_resolution_clock::now();
-        vm.run(0);
-        for (size_t i=0;i!=100000000;i++)
-            vm.run(1);
+        vm.run(entry);
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double,std::ratio<1,1000>> dur_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
         std::cout << dur_ms << "\n";
