@@ -47,8 +47,5 @@ namespace ir {
         size_t length;
         size_t currentLine;
         size_t currentColumn;
-
-
-
     };
 };
