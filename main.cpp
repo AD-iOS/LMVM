@@ -8,14 +8,13 @@
 
 int main(int argc, char *argv[])
 {
-    /*if (argc < 2) {
+    if (argc < 2) {
         std::cout << "Usage: " << argv[0] << " [options] <file> [args]\n";
         format_out_version();
         return 0;
-    }*/
-
-    // argv[1]
-    Loader loader("/home/gx/Downloads/LMVM/test/fib.lmc");
+    }
+    
+    Loader loader(argv[1]);
     auto code = loader.load();
     const auto entry = loader.entry();
 
