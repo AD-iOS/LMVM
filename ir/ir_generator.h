@@ -92,6 +92,9 @@ namespace ir {
         void gen_newstr();
         void gen_print();
 
+        void gen_pushr();
+        void gen_popr();
+
         // 辅助函数
         void write_opcode(uint8_t op);
         void write_operand(const void* data, size_t size);
