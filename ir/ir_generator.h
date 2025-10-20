@@ -17,6 +17,7 @@
 namespace ir {
     class Generator {
         size_t pos;
+        size_t opCount;
         size_t idx_counter{};
         std::vector<Token>& tokens;
         std::vector<uint8_t> code;
@@ -103,7 +104,7 @@ namespace ir {
         void write_address(size_t addr);
 
         // 标签处理
-        void process_label(const std::string& label);
+        inline void process_label(const std::string& label);
         void resolve_labels();
 
         bool expect_token(TokenType expected, const std::string &error_msg);

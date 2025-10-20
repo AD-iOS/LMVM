@@ -17,7 +17,7 @@ class VirtualMachine {
     // 返回地址栈，仅用于控制流（CALL/RET），不会作为数据栈使用
     std::vector<size_t> return_address_stack;
 
-    std::vector<uint64_t> stack;
+    std::vector<int64_t> stack;
     size_t sp;
     int64_t cmp_flag{};
 

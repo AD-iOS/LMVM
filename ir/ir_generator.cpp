@@ -68,6 +68,7 @@ namespace ir
 
         // 第二遍：生成代码
         pos = 0;
+        opCount = 1;// pc从1开始 
         while (pos < tokens.size()) {
             Token &token = tokens[pos];
             trim(token.value);
@@ -159,6 +160,7 @@ namespace ir
                     errs["Unknown opcode: " + token.value] = ErrLevel::ERROR;
                     pos++; // 确保前进
                 }
+                opCount++;
             } else if (token.type == TokenType::IDENT && pos + 1 < tokens.size() &&
                        tokens[pos + 1].type == TokenType::COLON) {
                 process_label(token.value);
@@ -227,10 +229,9 @@ namespace ir
         return std::stoll(num_str);
     }
 
-    void Generator::process_label(const std::string &label)
+    inline void Generator::process_label(const std::string &label)
     {
-        // 当前代码位置就是标签的指令偏移
-        symbol_table[label] = code.size();
+        symbol_table[label] = opCount;
     }
 
     void Generator::resolve_labels()

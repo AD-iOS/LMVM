@@ -2,7 +2,7 @@
 
 fib:
     pushr r3
-    ble r3, fib.ret # if r3<=0 {ret r3}
+    ble r3, fibret # if r3<=0 {ret r3}
 
     subi r3, 1
     call fib # fib(r3-1)
@@ -16,7 +16,7 @@ fib:
     addr r0, r1
     ret
 
-fib.base:
+fibret:
     popr r0
     ret
     

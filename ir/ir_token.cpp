@@ -27,7 +27,11 @@ namespace ir {
         "newi","newstr",
 
         "print",
-        "vmcall"
+        "vmcall",
+
+        "pushr", "popr",
+
+        "ble", "bge"
     };
     std::vector<std::string> Lexer::macros = {
         "entry"

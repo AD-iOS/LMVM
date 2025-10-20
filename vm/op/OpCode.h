@@ -27,8 +27,7 @@ enum class OpCode {
     JLE,// <=
 
     BLE,BGE,
-
-    PUSHR, POPR
+    PUSHR,POPR,
 };
 struct Op {
     OpCode op;

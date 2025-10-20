@@ -12,8 +12,8 @@
 #include <memory>
 
 VirtualMachine::VirtualMachine(std::vector<Op> &program)
-    : pc(0), // 初始化堆管理器
-      program(program), heapManager(std::make_unique<HeapManager>(1024))
+    : pc(0), program(program), // 初始化堆管理器
+      sp(0), heapManager(std::make_unique<HeapManager>(1024))
 {
     memset(reg, 0, sizeof(reg));
 }
@@ -190,7 +190,7 @@ void VirtualMachine::execute(Op &op)
     case OpCode::CALL: {
         // op.data layout: first byte unused, next 8 bytes target (we'll read as uint64)
         uint64_t target = 0;
-        memcpy(&target, op.data.data() + 1, sizeof(uint64_t));
+        memcpy(&target, op.data.data(), sizeof(uint64_t));
         // push return address on dedicated return_address_stack
         return_address_stack.push_back(pc + 1);
         pc = target - 1; // -1 因为 run 会在 execute 后 pc++
@@ -201,6 +201,8 @@ void VirtualMachine::execute(Op &op)
             const size_t ret = return_address_stack.back();
             return_address_stack.pop_back();
             pc = ret - 1; // -1 同上
+        } else {
+            throw LmError::format("RET: no return address at %d", pc);
         }
         break;
     }
@@ -283,23 +285,125 @@ void VirtualMachine::execute(Op &op)
         memcpy(&CallNum, op.data.data(), sizeof(uint16_t));
 
         if (CallNum >= Handler::maxVMCallNum) {
-            throw LmError::format("vmcall[%d] Error: vmcall number out of range", CallNum);
+            throw LmError::format("VMCALL[%d]: vmcall number out of range", CallNum);
         }
 
         Handler::vmcallTable[CallNum](this);
         break;
     }
-
-    default: {
+    case OpCode::PUSHR: {
+        const auto r = op.data[0];
+        stack.push_back(reg[r]);
+        sp++;
+        break;
     }
+    case OpCode::POPR: {
+        const auto r = op.data[0];
+        if (sp == 0 || stack.empty()) {
+            throw LmError::format("POPR: stack underflow at %d", pc);
+        }
+        reg[r] = stack.back();
+        stack.pop_back();
+        sp--;
+        break;
+    }
+    default: {
+        throw LmError::format("Execute: unknown opcode %d", static_cast<int>(op.op));
+    }
+    }
+}
+
+#include <string>
+
+std::string OpCode2Str(OpCode op)
+{
+    switch (op) {
+    case OpCode::MOVRR:
+        return "MOVRR";
+    case OpCode::MOVRI:
+        return "MOVRI";
+    case OpCode::MOVRM:
+        return "MOVRM";
+    case OpCode::MOVMR:
+        return "MOVMR";
+    case OpCode::MOVMI:
+        return "MOVMI";
+    case OpCode::MOVMM:
+        return "MOVMM";
+    case OpCode::NEWI:
+        return "NEWI";
+    case OpCode::NEWSTR:
+        return "NEWSTR";
+    case OpCode::ADDR:
+        return "ADDR";
+    case OpCode::ADDM:
+        return "ADDM";
+    case OpCode::ADDI:
+        return "ADDI";
+    case OpCode::SUBR:
+        return "SUBR";
+    case OpCode::SUBM:
+        return "SUBM";
+    case OpCode::SUBI:
+        return "SUBI";
+    case OpCode::MULR:
+        return "MULR";
+    case OpCode::MULI:
+        return "MULI";
+    case OpCode::MULM:
+        return "MULM";
+    case OpCode::DIVR:
+        return "DIVR";
+    case OpCode::DIVI:
+        return "DIVI";
+    case OpCode::DIVM:
+        return "DIVM";
+    case OpCode::CALL:
+        return "CALL";
+    case OpCode::RET:
+        return "RET";
+    case OpCode::VMCALL:
+        return "VMCALL";
+    case OpCode::PRINT_REG:
+        return "PRINT_REG";
+    case OpCode::CMP:
+        return "CMP";
+    case OpCode::JMP:
+        return "JMP";
+    case OpCode::JE:
+        return "JE";
+    case OpCode::JNE:
+        return "JNE";
+    case OpCode::JG:
+        return "JG";
+    case OpCode::JGE:
+        return "JGE";
+    case OpCode::JL:
+        return "JL";
+    case OpCode::JLE:
+        return "JLE";
+    case OpCode::BLE:
+        return "BLE";
+    case OpCode::BGE:
+        return "BGE";
+    case OpCode::PUSHR:
+        return "PUSHR";
+    case OpCode::POPR:
+        return "POPR";
+    default:
+        return "UNKNOWN";
     }
 }
 
 void VirtualMachine::run(const size_t start)
 {
     pc = start;
-    while (pc < program.size()) {
-        execute(program[pc]);
+    while (pc <= program.size()) {
+        execute(program[pc - 1]);
+        if (pc > program.size()) {
+            // pc超出范围，段错误
+            LmError::format("Segmentation fault at %d", pc);
+        }
         pc++;
     }
 }
