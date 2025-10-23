@@ -4,12 +4,12 @@
 #include "../vm.h"
 namespace Handler
 {
-    inline void Lm_io_write(VirtualMachine *vm);
-    inline void Lm_io_read(VirtualMachine *vm);
-    inline void Lm_exit(VirtualMachine *vm);
+    void Lm_io_write(VirtualMachine *vm);
+    void Lm_io_read(VirtualMachine *vm);
+    void Lm_exit(VirtualMachine *vm);
 
-    static inline std::function<void(VirtualMachine *)>
-        vmcallTable[] = {
+    typedef void (*VmCall)(VirtualMachine *);
+    static VmCall vmcallTable[] = {
             [](VirtualMachine *vm) {
                 Lm_io_write(vm);
             },

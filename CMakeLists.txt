@@ -3,10 +3,20 @@ project(LmInterp)
 
 set(CMAKE_CXX_STANDARD 20)
 
-if(MSVC)
-set(CMAKE_CXX_FLAGS "/O2 ")
+if (MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
+    if (ENABLE_FLTO)
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /O2 /Oi /Ot /Ob2 /Gy /GF /GL")
+        set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LTCG")
+    else()
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /O2 /Oi /Ot /Ob2 /Gy /GF")
+    endif()
 else()
-set(CMAKE_CXX_FLAGS "-O3 -flto")
+    if (ENABLE_FLTO)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -ffast-math -march=native")
+    else()
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -ffast-math -march=native")
+    endif()
 endif()
 
 add_executable(lmvm 
@@ -24,11 +34,9 @@ add_executable(lmvm
         vm/op/Loader.cpp
         
         vm/call/handler.cpp
-        vm/call/io.cpp
 )
 
 add_executable(lmlc
         ir/main.cpp
         ir/ir_token.cpp
-        ir/ir_generator.cpp
-        ir/ir_generator.h)
+        ir/ir_generator.cpp)

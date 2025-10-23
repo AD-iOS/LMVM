@@ -13,7 +13,7 @@
 
 VirtualMachine::VirtualMachine(std::vector<Op> &program)
     : pc(0), program(program), // 初始化堆管理器
-      sp(0), heapManager(std::make_unique<HeapManager>(1024))
+      sp(0), heapManager(std::make_unique<HeapManager>(128))
 {
     memset(reg, 0, sizeof(reg));
 }
@@ -208,75 +208,67 @@ void VirtualMachine::execute(Op &op)
     }
     case OpCode::PRINT_REG: {
         const auto r = op.data[0];
-        std::cout << reg[r] << '\n';
+        std::cout << int64_t(reg[r]) << '\n';
         break;
     }
     case OpCode::BLE: {
         auto r = op.data[0];
-        uint64_t target = 0;
-        memcpy(&target, op.data.data() + 1, sizeof(uint64_t));
         if (reg[r] <= 0) {
-            pc = target - 1;
+            memcpy(&pc, op.data.data() + 1, sizeof(uint64_t));
+            pc -= 1;
         }
         break;
     }
     case OpCode::CMP: {
         const auto r1 = op.data[0];
         const auto r2 = op.data[1];
-        cmp_flag = std::bit_cast<int64_t>(reg[r1]) - std::bit_cast<int64_t>(reg[r2]);
+        cmp_flag = reg[r1] - reg[r2];
         break;
     }
     case OpCode::JMP: {
-        uint64_t mem;
-        memcpy(&mem, op.data.data(), sizeof(uint64_t));
-        pc = mem - 1;
+        memcpy(&pc, op.data.data(), sizeof(uint64_t));
+        pc -= 1;
         break;
     }
     case OpCode::JE: {
         if (cmp_flag == 0) {
-            uint64_t mem;
-            memcpy(&mem, op.data.data(), sizeof(uint64_t));
-            pc = mem - 1;
+            memcpy(&pc, op.data.data(), sizeof(uint64_t));
+            pc -= 1;
         }
         break;
     }
     case OpCode::JNE: {
         if (cmp_flag != 0) {
-            uint64_t mem;
-            memcpy(&mem, op.data.data(), sizeof(uint64_t));
-            pc = mem - 1;
+            memcpy(&pc, op.data.data(), sizeof(uint64_t));
+            pc -= 1;
         }
         break;
     }
     case OpCode::JL: {
         if (cmp_flag < 0) {
-            uint64_t mem;
-            memcpy(&mem, op.data.data(), sizeof(uint64_t));
-            pc = mem - 1;
+            memcpy(&pc, op.data.data(), sizeof(uint64_t));
+            pc -= 1;
         }
         break;
     }
     case OpCode::JLE: {
         if (cmp_flag <= 0) {
-            uint64_t mem;
-            memcpy(&mem, op.data.data(), sizeof(uint64_t));
-            pc = mem - 1;
+            memcpy(&pc, op.data.data(), sizeof(uint64_t));
+            pc -= 1;
         }
         break;
     }
     case OpCode::JG: {
         if (cmp_flag > 0) {
-            uint64_t mem;
-            memcpy(&mem, op.data.data(), sizeof(uint64_t));
-            pc = mem - 1;
+            memcpy(&pc, op.data.data(), sizeof(uint64_t));
+            pc -= 1;
         }
         break;
     }
     case OpCode::JGE: {
         if (cmp_flag >= 0) {
-            uint64_t mem;
-            memcpy(&mem, op.data.data(), sizeof(uint64_t));
-            pc = mem - 1;
+            memcpy(&pc, op.data.data(), sizeof(uint64_t));
+            pc -= 1;
         }
         break;
     }
@@ -400,10 +392,10 @@ void VirtualMachine::run(const size_t start)
     pc = start;
     while (pc <= program.size()) {
         execute(program[pc - 1]);
-        if (pc > program.size()) {
+        //if (pc > program.size()) {
             // pc超出范围，段错误
-            LmError::format("Segmentation fault at %d", pc);
-        }
+        //    LmError::format("Segmentation fault at %d", pc);
+        //}
         pc++;
     }
 }

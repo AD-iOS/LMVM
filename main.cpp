@@ -9,7 +9,7 @@
 int main(int argc, char *argv[])
 {
     if (argc < 2) {
-        std::cout << "Usage: " << argv[0] << " [options] <file> [args]\n";
+        std::cout << "\n    Usage: " << argv[0] << " [options] <file> [args]\n\n";
         format_out_version();
         return 0;
     }
@@ -26,6 +26,6 @@ int main(int argc, char *argv[])
         std::cout << "Error: " << e.what() << std::endl;
     }
     auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::ratio<1, 1000>> dur_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    auto dur_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     std::cout << "Finish in " << dur_ms << std::endl;
 }
