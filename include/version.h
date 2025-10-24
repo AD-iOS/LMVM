@@ -4,6 +4,7 @@
 
 #pragma once
 #pragma region LMVM_VERSION
+#pragma endregion
 #include <iostream>
 
 #define PRINT(REG) std::cout << REG << '\n'
@@ -17,3 +18,4 @@ inline auto format_out_version() {
     PRINT("Release Date: " << LMVM_ALPHA_YEAR << "-" << LMVM_ALPHA_DATE);
 }
 #undef PRINT
+
