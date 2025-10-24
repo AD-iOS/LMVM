@@ -6,10 +6,10 @@
   ```bat
   git clone https://github.com/Lamina-dev/LMVM.git
   cd LMVM
-  mkdir out
-  cd out
-  cmake .. -G Ninja
-  ninja -j12
+  mkdir build
+  cd build
+  cmake ..
+  cmmake --build .
   .\lmlc.exe ../test/hello.lmi hello.lmc
   .\lmvm.exe ./hello.lmc
   ```
@@ -28,6 +28,7 @@
 - ✅ **可扩展**：模块化指令集架构
 
 ---
+
 
 
 
