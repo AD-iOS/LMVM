@@ -8,7 +8,7 @@
   cd LMVM
   mkdir out
   cd out
-  cmake ..
+  cmake .. -G Ninja
   ninja -j12
   .\lmlc.exe ../test/hello.lmi hello.lmc
   .\lmvm.exe ./hello.lmc
@@ -28,6 +28,7 @@
 - ✅ **可扩展**：模块化指令集架构
 
 ---
+
 
 
 
