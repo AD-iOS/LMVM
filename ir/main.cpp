@@ -5,11 +5,11 @@
 
 #include "ir_generator.h"
 #include "ir_token.h"
+#include "version.h"
 
 int main(int argc,char *argv[]) {
     if (argc < 3) {
-        std::cout<<"Usage:\n";
-        std::cout<<"./ir [ir_file].lmi [bc_file].lmc\n";
+        std::cout << "\n    Usage: " << argv[0] << " [ir_file] [bc_file]\n\n";
         return 0;
     }
     std::ifstream file(argv[1]);

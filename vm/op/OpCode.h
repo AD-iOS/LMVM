@@ -5,6 +5,7 @@
 #pragma once
 #include <vector>
 #include <cstdint>
+#include <string>
 
 enum class OpCode {
     MOVRR,MOVRI,MOVRM,MOVMR,MOVMI,MOVMM,
@@ -29,6 +30,7 @@ enum class OpCode {
     BLE,BGE,
     PUSHR,POPR,
 };
+std::string OpCode2Str(OpCode op);
 struct Op {
     OpCode op;
     alignas(8) std::vector<uint8_t> data;

@@ -19,8 +19,9 @@ else()
     endif()
 endif()
 
+include_directories(include)
 add_executable(lmvm 
-        main.cpp
+        vm/main.cpp
         vm/vm.cpp
 
         vm/models/Object.cpp

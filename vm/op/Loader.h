@@ -4,6 +4,7 @@
 
 #pragma once
 #include "OpCode.h"
+#include "version.h"
 #include <cstdint>
 #include <fstream>
 
@@ -29,5 +30,5 @@ public:
     
 private:
     static const uint32_t MAGIC = 0x4D4C5451;   // Little Endian 'QTLM'
-    static const uint32_t VERSION = 0x00000001; // current version
+    static const uint32_t VERSION = LMVM_DEV; // current version
 };

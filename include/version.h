@@ -10,7 +10,7 @@
 #define LMVM_VERSION "0.0.1"
 #define LMVM_ALPHA_YEAR "2025"
 #define LMVM_ALPHA_DATE "10-17"
-
+#define LMVM_DEV 0x00000001
 
 inline auto format_out_version() {
     PRINT("Lamina-VM Version: " << LMVM_VERSION << "-dev");
