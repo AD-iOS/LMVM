@@ -1,7 +1,8 @@
 %entry start
 
 fib:
-    ble r3, fibret         # if r3 <= 0, return r3
+    cmp r3, r11
+    jle fibret            # if r3 <= 0, return r3
 
     pushr r3              # 保存当前n
     subi r3, 1            # n-1
@@ -19,6 +20,7 @@ fib:
     ret
 
 fibret:
+    movri r11, 1
     movrr r0, r3          # 基准情况: return n (0或1)
     ret
 
@@ -26,3 +28,4 @@ start:
     movri r3, 30          # 计算fib(30)
     call fib
     print r0
+
