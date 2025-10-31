@@ -156,6 +156,8 @@ namespace ir
                     gen_pushr();
                 else if (token.value == "popr")
                     gen_popr();
+                else if (token.value == "pause")
+                    gen_pause();
                 else {
                     errs["Unknown opcode: " + token.value] = ErrLevel::ERROR;
                     pos++; // 确保前进
@@ -1103,6 +1105,12 @@ namespace ir
             return;
         write_register(parse_register(cur_token().value));
 
+        next_token();
+    }
+
+    void Generator::gen_pause() {
+        write_opcode(static_cast<uint8_t>(OpCode::PAUSE));
+        code.push_back(0);
         next_token();
     }
 

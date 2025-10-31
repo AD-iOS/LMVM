@@ -11,32 +11,41 @@
 #include <iostream>
 #include <memory>
 
-VirtualMachine::VirtualMachine(std::vector<Op> &program)
-    : pc(0), program(program), // 初始化堆管理器
-      sp(0), heapManager(std::make_unique<HeapManager>(128))
+VirtualMachine::VirtualMachine(std::vector<Op> &program,char** args)
+    : program(program), args(args),// 初始化堆管理器
+      pc(0), heapManager(std::make_unique<HeapManager>(128))
 {
     memset(reg, 0, sizeof(reg));
+    sp = reinterpret_cast<size_t*>(reg + reg_num);
 }
+#define op_data_mem(offest) (*reinterpret_cast<uint64_t*>(op.data.data() + offest))
+#define op_data_imm(offest) (*reinterpret_cast< int64_t*>(op.data.data() + offest))
 
-void VirtualMachine::execute(Op &op)
-{
+#define add_signed(tar) std::bit_cast< int64_t>(tar)
+#define sub_signed(tar) std::bit_cast<uint64_t>(tar)
+
+inline void VirtualMachine::execute(Op &op){
+
     switch (op.op) {
     case OpCode::MOVRI: {
-        auto r = op.data[0];
-        int64_t imm;
-        memcpy(&imm, op.data.data() + 1, sizeof(int64_t));
+        const auto r = op.data[0];
 
-        reg[r] = imm;
+        reg[r] = op_data_imm(1);
         break;
     }
     case OpCode::MOVRM: {
         const auto r1 = op.data[0];
-        uint64_t heapAddr;
-        memcpy(&heapAddr, op.data.data() + 1, sizeof(uint64_t));
-        const auto obj = heapManager->loadObject(heapAddr);
 
-        if (const auto intObj = std::dynamic_pointer_cast<LmInteger>(obj)) {
-            reg[r1] = intObj->to_ctype();
+        const auto r = op.data[1];
+        const auto offest = std::bit_cast<int8_t>(op.data[2]);
+
+        if(
+            const auto addr =
+            std::dynamic_pointer_cast<LmInteger>(
+                heapManager->loadObject(reg[r] + offest)
+                )
+            ){
+            reg[r1] = add_signed(addr->to_ctype());
         }
         break;
     }
@@ -49,25 +58,53 @@ void VirtualMachine::execute(Op &op)
     }
 
     case OpCode::MOVMI: {
-        uint64_t heapAddr;
-        memcpy(&heapAddr, op.data.data(), sizeof(uint64_t));
+        const auto r = op.data[0];
+        const auto offest = std::bit_cast<int8_t>(op.data[1]);
 
-        heapManager->updateObject(heapAddr, op.data.data() + 8);
+        if (
+            const auto addr =
+                    std::static_pointer_cast<LmInteger>(
+                        heapManager->loadObject(reg[r] + offest)
+                    )
+        ) {
+            addr->update_value(op.data.data() + 2);
+        }
         break;
     }
     case OpCode::MOVMR: {
-        uint64_t heapAddr;
-        memcpy(&heapAddr, op.data.data(), sizeof(uint64_t));
-        const auto r = op.data[8];
-
-        heapManager->updateObject(heapAddr, &reg[r]);
+        const auto r = op.data[0]; //base register
+        const auto offest = std::bit_cast<int8_t>(op.data[1]); //base + offest
+        const auto r1 = op.data[2];
+        if (
+            const auto addr =
+                    std::static_pointer_cast<LmInteger>(
+                        heapManager->loadObject(reg[r] + offest)
+                    )
+        ) {
+            addr->update_value(reg[r1]);
+        }
         break;
     }
     case OpCode::MOVMM: {
-        uint64_t heapAddr;
-        memcpy(&heapAddr, op.data.data(), sizeof(uint64_t));
-
-        heapManager->updateObject(heapAddr, op.data.data() + 8);
+        const auto r1 = op.data[0];
+        const auto offest1 = std::bit_cast<int8_t>(op.data[1]);
+        const auto r2 = op.data[2];
+        const auto offest2 = std::bit_cast<int8_t>(op.data[3]);
+        if (
+            const auto addr1 =
+                    std::static_pointer_cast<LmInteger>(
+                        heapManager->loadObject(reg[r1] + offest1)
+                        )
+        ) {
+            if (
+                const auto addr2 =
+                        std::static_pointer_cast<LmInteger>(
+                            heapManager->loadObject(reg[r2] + offest2)
+                        )
+            ) {
+                addr1->update_value(addr2->get_ptr());
+            }
+        }
         break;
     }
     case OpCode::ADDR: {
@@ -79,20 +116,21 @@ void VirtualMachine::execute(Op &op)
     }
     case OpCode::ADDI: {
         const auto r = op.data[0];
-        int64_t imm;
-        memcpy(&imm, op.data.data() + 1, sizeof(int64_t));
 
-        reg[r] += imm;
+        reg[r] += op_data_imm(1);
         break;
     }
     case OpCode::ADDM: {
         const auto r = op.data[0];
-        uint64_t heapAddr;
-        memcpy(&heapAddr, op.data.data() + 1, sizeof(uint64_t));
-        auto obj = heapManager->loadObject(heapAddr);
-
-        if (auto intObj = std::dynamic_pointer_cast<LmInteger>(obj)) {
-            reg[r] += intObj->to_ctype();
+        const auto r1 = op.data[1]; //base register
+        const auto offest1 = std::bit_cast<int8_t>(op.data[2]); //base + offest
+        if (
+            const auto addr1 =
+                    std::static_pointer_cast<LmInteger>(
+                        heapManager->loadObject(reg[r1] + offest1)
+                        )
+        ) {
+            reg[r] += add_signed(addr1->to_ctype());
         }
         break;
     }
@@ -105,20 +143,21 @@ void VirtualMachine::execute(Op &op)
     }
     case OpCode::SUBI: {
         const auto r = op.data[0];
-        int64_t imm;
-        memcpy(&imm, op.data.data() + 1, sizeof(int64_t));
 
-        reg[r] -= imm;
+        reg[r] -= op_data_imm(1);
         break;
     }
     case OpCode::SUBM: {
         const auto r = op.data[0];
-        uint64_t heapAddr;
-        memcpy(&heapAddr, op.data.data() + 1, sizeof(uint64_t));
-        const auto obj = heapManager->loadObject(heapAddr);
-
-        if (auto intObj = std::dynamic_pointer_cast<LmInteger>(obj)) {
-            reg[r] -= intObj->to_ctype();
+        const auto r1 = op.data[1]; //base register
+        const auto offest1 = std::bit_cast<int8_t>(op.data[2]); //base + offest
+        if (
+            const auto addr1 =
+                    std::static_pointer_cast<LmInteger>(
+                        heapManager->loadObject(reg[r1] + offest1)
+                        )
+        ) {
+            reg[r] -= add_signed(addr1->to_ctype());
         }
         break;
     }
@@ -132,18 +171,20 @@ void VirtualMachine::execute(Op &op)
     case OpCode::MULI: {
         const auto r = op.data[0];
 
-        int64_t imm;
-        memcpy(&imm, op.data.data() + 1, sizeof(int64_t));
-        reg[r] *= imm;
+        reg[r] *= op_data_imm(1);
         break;
     }
     case OpCode::MULM: {
         const auto r = op.data[0];
-        uint64_t heapAddr;
-        memcpy(&heapAddr, op.data.data() + 1, sizeof(uint64_t));
-        const auto obj = heapManager->loadObject(heapAddr);
-        if (auto intObj = std::dynamic_pointer_cast<LmInteger>(obj)) {
-            reg[r] *= intObj->to_ctype();
+        const auto r1 = op.data[1]; //base register
+        const auto offest1 = std::bit_cast<int8_t>(op.data[2]); //base + offest
+        if (
+            const auto addr1 =
+                    std::static_pointer_cast<LmInteger>(
+                        heapManager->loadObject(reg[r1] + offest1)
+                        )
+        ) {
+            reg[r] *= add_signed(addr1->to_ctype());
         }
         break;
     }
@@ -156,51 +197,50 @@ void VirtualMachine::execute(Op &op)
     }
     case OpCode::DIVI: {
         const auto r = op.data[0];
-        int64_t imm;
-        memcpy(&imm, op.data.data() + 1, sizeof(int64_t));
-        if (imm != 0)
+        if (const auto imm = op_data_imm(1); imm != 0)
             reg[r] /= imm;
         break;
     }
     case OpCode::DIVM: {
         const auto r = op.data[0];
-        uint64_t heapAddr;
-        memcpy(&heapAddr, op.data.data() + 1, sizeof(uint64_t));
-        const auto obj = heapManager->loadObject(heapAddr);
-        if (const auto intObj = std::dynamic_pointer_cast<LmInteger>(obj)) {
-            if (const auto val = intObj->to_ctype(); val != 0)
-                reg[r] /= val;
+        const auto r1 = op.data[1]; //base register
+        const auto offest1 = std::bit_cast<int8_t>(op.data[2]); //base + offest
+        if (
+            const auto addr1 =
+                    std::static_pointer_cast<LmInteger>(
+                        heapManager->loadObject(reg[r1] + offest1)
+                        )
+        ) {
+            reg[r] /= add_signed(addr1->to_ctype());
         }
         break;
     }
     case OpCode::NEWI: { // 分配整数对象
         const auto r = op.data[0];
-        int64_t imm;
-        memcpy(&imm, op.data.data() + 1, sizeof(int64_t));
 
-        reg[r] = heapManager->storeObject(std::make_shared<LmInteger>(imm)); // 返回堆地址
+        reg[r] = static_cast<int64_t>(
+            heapManager->storeObject(std::make_shared<LmInteger>(op_data_imm(1)))
+            ); // 返回堆地址
         break;
     }
     case OpCode::NEWSTR: {
         const auto r = op.data[0];
 
-        reg[r] = heapManager->storeObject(std::make_shared<LmString>(reinterpret_cast<char *>(op.data.data() + 1)));
+        reg[r] = static_cast<int64_t>(
+            heapManager->storeObject(std::make_shared<LmString>(reinterpret_cast<char *>(op.data.data() + 1)) )
+            );
         break;
     }
     case OpCode::CALL: {
-        // op.data layout: first byte unused, next 8 bytes target (we'll read as uint64)
-        uint64_t target = 0;
-        memcpy(&target, op.data.data(), sizeof(uint64_t));
-        // push return address on dedicated return_address_stack
+
         return_address_stack.push_back(pc + 1);
-        pc = target - 1; // -1 因为 run 会在 execute 后 pc++
+        pc = op_data_mem(0) - 1; // -1 因为 run 会在 execute 后 pc++
         break;
     }
     case OpCode::RET: {
         if (!return_address_stack.empty()) {
-            const size_t ret = return_address_stack.back();
+            pc = return_address_stack.back() - 1; // -1 同上
             return_address_stack.pop_back();
-            pc = ret - 1; // -1 同上
         } else {
             throw LmError::format("RET: no return address at %d", pc);
         }
@@ -208,14 +248,20 @@ void VirtualMachine::execute(Op &op)
     }
     case OpCode::PRINT_REG: {
         const auto r = op.data[0];
-        std::cout << int64_t(reg[r]) << '\n';
+        std::cout << reg[r] << '\n';
         break;
     }
     case OpCode::BLE: {
-        auto r = op.data[0];
+        const auto r = op.data[0];
         if (reg[r] <= 0) {
-            memcpy(&pc, op.data.data() + 1, sizeof(uint64_t));
-            pc -= 1;
+            pc = op_data_mem(1) - 1;
+        }
+        break;
+    }
+    case OpCode::BGE: {
+        const auto r = op.data[0];
+        if (reg[r] >= 0) {
+            pc = op_data_mem(1) - 1;
         }
         break;
     }
@@ -226,49 +272,42 @@ void VirtualMachine::execute(Op &op)
         break;
     }
     case OpCode::JMP: {
-        memcpy(&pc, op.data.data(), sizeof(uint64_t));
-        pc -= 1;
+        pc = op_data_mem(0) - 1;
         break;
     }
     case OpCode::JE: {
         if (cmp_flag == 0) {
-            memcpy(&pc, op.data.data(), sizeof(uint64_t));
-            pc -= 1;
+            pc = op_data_mem(0) - 1;
         }
         break;
     }
     case OpCode::JNE: {
         if (cmp_flag != 0) {
-            memcpy(&pc, op.data.data(), sizeof(uint64_t));
-            pc -= 1;
+            pc = op_data_mem(0) - 1;
         }
         break;
     }
     case OpCode::JL: {
         if (cmp_flag < 0) {
-            memcpy(&pc, op.data.data(), sizeof(uint64_t));
-            pc -= 1;
+            pc = op_data_mem(0) - 1;
         }
         break;
     }
     case OpCode::JLE: {
         if (cmp_flag <= 0) {
-            memcpy(&pc, op.data.data(), sizeof(uint64_t));
-            pc -= 1;
+            pc = op_data_mem(0) - 1;
         }
         break;
     }
     case OpCode::JG: {
         if (cmp_flag > 0) {
-            memcpy(&pc, op.data.data(), sizeof(uint64_t));
-            pc -= 1;
+            pc = op_data_mem(0) - 1;
         }
         break;
     }
     case OpCode::JGE: {
         if (cmp_flag >= 0) {
-            memcpy(&pc, op.data.data(), sizeof(uint64_t));
-            pc -= 1;
+            pc = op_data_mem(0) - 1;
         }
         break;
     }
@@ -276,27 +315,31 @@ void VirtualMachine::execute(Op &op)
         uint16_t CallNum;
         memcpy(&CallNum, op.data.data(), sizeof(uint16_t));
 
-        if (CallNum >= Handler::maxVMCallNum) {
+        if (CallNum >= Handler::maxVMCallNum)
             throw LmError::format("VMCALL[%d]: vmcall number out of range", CallNum);
-        }
+
 
         Handler::vmcallTable[CallNum](this);
         break;
     }
     case OpCode::PUSHR: {
         const auto r = op.data[0];
-        stack.push_back(reg[r]);
-        sp++;
+        stack.push_back(add_signed(reg[r]));
+        (*sp)++;
         break;
     }
     case OpCode::POPR: {
         const auto r = op.data[0];
-        if (sp == 0 || stack.empty()) {
+        if (*sp == 0 || stack.empty()) {
             throw LmError::format("POPR: stack underflow at %d", pc);
         }
-        reg[r] = stack.back();
+        reg[r] = sub_signed(stack.back());
         stack.pop_back();
-        sp--;
+        (*sp)--;
+        break;
+    }
+    case OpCode::PAUSE: {
+        vmdbg();
         break;
     }
     default: {
@@ -310,12 +353,49 @@ void VirtualMachine::execute(Op &op)
 void VirtualMachine::run(const size_t start)
 {
     pc = start;
-    while (pc <= program.size()) {
+    // 使用基于范围的循环而不是索引访问以提高性能
+    const size_t program_size = program.size();
+    while (pc <= program_size) {
         execute(program[pc - 1]);
-        //if (pc > program.size()) {
-            // pc超出范围，段错误
-        //    LmError::format("Segmentation fault at %d", pc);
-        //}
         pc++;
+    }
+}
+
+void VirtualMachine::vmdbg() const {
+    bool quit = false;
+    std::string t;
+    while (true) {
+        std::cout << "(debug) ";
+        std::getline(std::cin,t);
+        switch (t[0]) {
+            case 'r': {
+                if (!t.substr(1).empty()) {
+                    std::string count;
+                    for (const auto& c : t.substr(1)) {
+                        if (std::isspace(c)) continue;
+                        count += c;
+                    }
+                    std::cout << "r" << count << " = " << reg[std::stoi(count)] << std::endl;
+                }
+                for (size_t i=0;i <= 15;i++) {
+                    std::cout << "r" << i << " = " << reg[i] << "\n";
+                }
+                std::cout << "sp = " << *sp << std::endl;
+                break;
+            }
+            case 'b': {
+                quit = true;
+                break;
+            }
+            case -1:case '\n':case '\t':case '\r':{break;}
+            case 'p': {
+
+            }
+            default: {
+                std::cerr << "unknown: " << t << std::endl;
+                break;
+            }
+        }
+        if (quit)return;
     }
 }

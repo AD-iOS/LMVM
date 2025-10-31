@@ -30,3 +30,8 @@ void Handler::Lm_exit(VirtualMachine *vm)
     // 抛出异常以触发主程序的统一错误处理路径
     throw LmError::format("Terminated before completion (code %d)",code);
 }
+
+void Handler::Lm_get_args(VirtualMachine *vm) {
+
+}
+

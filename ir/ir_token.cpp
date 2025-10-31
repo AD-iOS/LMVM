@@ -31,7 +31,7 @@ namespace ir {
 
         "pushr", "popr",
 
-        "ble", "bge"
+        "ble", "bge", "pause"
     };
     std::vector<std::string> Lexer::macros = {
         "entry"

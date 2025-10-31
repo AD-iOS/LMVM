@@ -28,7 +28,7 @@ enum class OpCode {
     JLE,// <=
 
     BLE,BGE,
-    PUSHR,POPR,
+    PUSHR,POPR,PAUSE,
 };
 std::string OpCode2Str(OpCode op);
 struct Op {

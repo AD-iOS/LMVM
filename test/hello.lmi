@@ -6,4 +6,3 @@ start:
 
     movri r3, 0 #
     vmcall 3 #exit
-

@@ -1,4 +1,6 @@
 #include "heap.h"
+
+#include <utility>
 #include "error/error.h"
 
 
@@ -52,8 +54,8 @@ void HeapManager::deallocate(size_t address) {
 }
 
 size_t HeapManager::storeObject(std::shared_ptr<LmObject> obj) {
-    size_t address = allocate(1);  // 每个对象占用一个槽位
-    heap[address] = obj;
+    const size_t address = allocate(1);  // 每个对象占用一个槽位
+    heap[address] = std::move(obj);
     return address;
 }
 

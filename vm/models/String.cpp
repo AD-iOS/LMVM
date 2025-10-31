@@ -24,3 +24,22 @@ void LmString::push(LmString& _Str2) {
     length += _Str2.len();
     _Str2.m_value = nullptr;
 }
+
+// 添加移动构造函数以提高性能
+LmString::LmString(LmString&& other) noexcept 
+    : LmObject(ObjectType::STRING),
+      m_value(other.m_value),
+      size(other.size),
+      length(other.length) {
+    // 将源对象置为无效状态
+    other.m_value = nullptr;
+    other.size = 0;
+    other.length = 0;
+}
+LmString::LmString(char* value):
+        LmObject(ObjectType::STRING),
+        m_value(value),
+        length(std::strlen(value)){
+            auto remainder = length % 16;
+            size = remainder == 0 ? length : (length + 16 - remainder);
+        }

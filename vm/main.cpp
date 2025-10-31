@@ -1,7 +1,7 @@
 #include "version.h"
+#include "vm.h"
 #include "error/error.h"
 #include "op/Loader.h"
-#include "vm.h"
 
 #include <chrono>
 #include <iostream>
@@ -18,14 +18,14 @@ int main(int argc, char *argv[])
     auto code = loader.load();
     const auto entry = loader.entry();
 
-    VirtualMachine vm(code);
-    auto start = std::chrono::high_resolution_clock::now();
+    VirtualMachine vm(code,argv);
+    const auto start = std::chrono::high_resolution_clock::now();
     try {
         vm.run(entry);
     } catch (const LmError &e) {
         std::cout << "Error: " << e.what() << std::endl;
     }
-    auto end = std::chrono::high_resolution_clock::now();
-    auto dur_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    const auto end = std::chrono::high_resolution_clock::now();
+    const auto dur_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     std::cout << "Finish in " << dur_ms << std::endl;
 }

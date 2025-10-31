@@ -13,13 +13,8 @@ class LmString : public LmObject {
     size_t length;
 public:
     
-    LmString(char* value):
-        LmObject(ObjectType::STRING),
-        m_value(value),
-        length(std::strlen(value)){
-            auto remainder = length % 16;
-            size = remainder == 0 ? length : (length + 16 - remainder);
-        }
+    LmString(char* value);
+    LmString(LmString&& other)noexcept;
     ~LmString() = default;
     char* to_ctype()const{return m_value;}
     size_t len()const{return length;}
