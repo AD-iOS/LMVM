@@ -4,5 +4,5 @@ start:
     newstr r3 "Hello World\n\0" #return address to reg3
     vmcall 0 #write
 
-    movri r3, 0 #
-    vmcall 3 #exit
+    mov r3, 0 #
+    vmcall 2 #exit

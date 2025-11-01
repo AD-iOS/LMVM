@@ -1,6 +1,6 @@
 %entry id
 
 id:
-    newstr r3 "HelloWorld\n\0"
-    vmcall 0
+    mov r3, 324343
+    print r3
 
