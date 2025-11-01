@@ -52,7 +52,7 @@ namespace ir
             if (token.type == TokenType::OPCODE) {
                 // 根据操作码调用相应的生成函数
                 if (token.value == "mov")
-                    gen_movrr(); // mov 别名
+                    gen_mov();
                 else if (token.value == "movri")
                     gen_movri();
                 else if (token.value == "movrr")
@@ -292,6 +292,30 @@ namespace ir
     // 指令生成函数实现
 
     // MOV 指令系列
+    void Generator::gen_mov() {
+        bool is_error = false;
+
+        //嵌套switch引发了指令越界和100%报错问题，改用if else
+        if (tokens[pos+1].type == TokenType::REG) {
+            if (tokens[pos+2].type != TokenType::COMMA) is_error = true;
+            if (tokens[pos+3].type == TokenType::REG) gen_movrr();
+            else if (tokens[pos+3].type == TokenType::NUM)gen_movri();
+            else if (tokens[pos+3].type == TokenType::LEFT_BRACKET)gen_movrm();
+            else is_error = true;
+        }else if (tokens[pos+1].type == TokenType::LEFT_BRACKET) {
+            if (tokens[pos+6].type != TokenType::COMMA) is_error = true;
+            if (tokens[pos+7].type == TokenType::REG) gen_movrr();
+            else if (tokens[pos+7].type == TokenType::NUM)gen_movri();
+            else if (tokens[pos+7].type == TokenType::LEFT_BRACKET)gen_movrm();
+            else is_error = true;
+        }else is_error = true;
+
+        if (is_error) {
+            errs["undefined format: at(" + std::to_string(cur_token().line) +
+                                ":" + std::to_string(cur_token().column) + ")"] = ErrLevel::ERROR;
+        }
+    }
+
     void Generator::gen_movri()
     {
         write_opcode(static_cast<uint8_t>(OpCode::MOVRI));

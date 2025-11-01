@@ -54,7 +54,10 @@ namespace ir {
         void next_token();
         Token& cur_token() const;
 
+
         // 指令生成函数
+        void gen_mov(); //自动推导mov后缀
+
         void gen_movri();
         void gen_addi();
         void gen_subi();
