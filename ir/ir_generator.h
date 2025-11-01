@@ -48,7 +48,7 @@ namespace ir {
         // 获取生成的字节码
         const std::vector<uint8_t>& getCode() const { return code; }
         // 保存到文件
-        bool saveToFile(const std::string& filename);
+        bool saveToFile(const std::string& filename) const;
 
     private:
         void next_token();
@@ -56,28 +56,29 @@ namespace ir {
 
         // 指令生成函数
         void gen_movri();
+        void gen_addi();
+        void gen_subi();
+        void gen_muli();
+        void gen_divi();
+
         void gen_movrr();
+        void gen_addr();
+        void gen_subr();
+        void gen_mulr();
+        void gen_divr();
+        void gen_cmp();
+
         void gen_movrm();
+        void gen_addm();
+        void gen_subm();
+        void gen_mulm();
+        void gen_divm();
+
         void gen_movmr();
         void gen_movmi();
         void gen_movmm();
 
-        void gen_addr();
-        void gen_addm();
-        void gen_addi();
-        void gen_subr();
-        void gen_subm();
-        void gen_subi();
-        void gen_mulr();
-        void gen_mulm();
-        void gen_muli();
-        void gen_divr();
-        void gen_divm();
-        void gen_divi();
-
         void gen_call();
-        void gen_ret();
-        void gen_vmcall();
         void gen_jmp();
         void gen_je();
         void gen_jl();
@@ -85,17 +86,20 @@ namespace ir {
         void gen_jge();
         void gen_jle();
         void gen_jne();
+
         void gen_ble();
         void gen_bge();
-        void gen_cmp();
 
         void gen_newi();
         void gen_newstr();
-        void gen_print();
 
+        void gen_print();
         void gen_pushr();
         void gen_popr();
 
+        void gen_vmcall();
+
+        void gen_ret();
         void gen_pause();
 
         // 辅助函数
@@ -104,6 +108,9 @@ namespace ir {
         void write_immediate(int64_t value);
         void write_register(uint8_t reg);
         void write_address(size_t addr);
+
+        void parse_and_write_reg_add_offest();
+
 
         // 标签处理
         inline void process_label(const std::string& label);

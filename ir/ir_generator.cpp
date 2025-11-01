@@ -3,13 +3,14 @@
 //
 
 #include "ir_generator.h"
-#include "../vm/op/OpCode.h"
+#include "../../include/OpCode.h"
 #include <algorithm>
 #include <cctype>
 #include <cstring>
 #include <fstream>
 #include <iostream>
 #include <string>
+#include "version.h"
 
 namespace ir
 {
@@ -43,30 +44,6 @@ namespace ir
 
     bool Generator::build()
     {
-        // 第一遍：收集标签定义
-        // pos = 0;
-
-        /* while (pos < tokens.size()) {
-             Token &token = tokens[pos];
-
-             if (token.type == TokenType::IDENT && pos + 1 < tokens.size() &&
-                 tokens[pos + 1].type == TokenType::COLON) {
-                 // 标签定义
-                 //process_label(token.value);
-                 pos += 2; // 跳过标签名和冒号
-             } else if (token.type == TokenType::MACRO && token.value == "entry") {
-                 // 入口点定义
-                 pos++; // 跳过entry
-                 if (pos < tokens.size() && tokens[pos].type == TokenType::IDENT) {
-                     entry_label = tokens[pos].value;
-                 }
-                 pos++; // 跳过标签名
-             } else {
-                 pos++; // 移动到下一个token
-             }
-         }*/
-
-        // 第二遍：生成代码
         pos = 0;
         opCount = 1;// pc从1开始 
         while (pos < tokens.size()) {
@@ -195,9 +172,50 @@ namespace ir
         code.push_back(op);
     }
 
+    void Generator::parse_and_write_reg_add_offest() {
+        if (!expect_token(TokenType::LEFT_BRACKET, "Expected `[`"))
+            return;
+
+        next_token();
+        if (cur_token().type == TokenType::REG) {
+            write_register(parse_register(cur_token().value));
+        } else {
+            errs["Expected register: at(" + std::to_string(cur_token().line) +
+                 ":" + std::to_string(cur_token().column) + ")"] = ErrLevel::ERROR;
+            return;
+        }
+
+        char flag = 1;
+        next_token();
+        if (cur_token().type == TokenType::MINUS) {
+            flag = -1;
+        }
+        else if (cur_token().type == TokenType::PLUS) {
+            flag = 1;
+        }else {
+            errs["Expected `+`or`-`: at(" + std::to_string(cur_token().line) +
+                 ":" + std::to_string(cur_token().column) + ")"] = ErrLevel::ERROR;
+            return;
+        }
+
+        next_token();
+        if (cur_token().type == TokenType::NUM) {
+            const auto offest = std::stoul(cur_token().value);
+            if ((flag == -1 && offest > INT8_MAX) || (flag == 1 && offest > UINT8_MAX) ) {
+                errs["Excessive offest: at(" + std::to_string(cur_token().line) +
+                 ":" + std::to_string(cur_token().column) + ")"] = ErrLevel::ERROR;
+                return;
+            }
+            code.push_back(static_cast<uint8_t>(offest*flag));
+        }
+
+        next_token();
+        if (!expect_token(TokenType::RIGHT_BRACKET, "Expected ']'"))return;
+    }
+
     void Generator::write_operand(const void *data, size_t size)
     {
-        const uint8_t *bytes = static_cast<const uint8_t *>(data);
+        const auto bytes = static_cast<const uint8_t *>(data);
         code.insert(code.end(), bytes, bytes + size);
     }
 
@@ -264,8 +282,8 @@ namespace ir
     bool Generator::expect_token(TokenType expected, const std::string &error_msg)
     {
         if (cur_token().type != expected) {
-            errs[error_msg + " at line " + std::to_string(cur_token().line) +
-                 " column " + std::to_string(cur_token().column)] = ErrLevel::ERROR;
+            errs[error_msg + ": at(" + std::to_string(cur_token().line) +
+                 ":" + std::to_string(cur_token().column) + ")"] = ErrLevel::ERROR;
             return false;
         }
         return true;
@@ -285,7 +303,7 @@ namespace ir
         write_register(parse_register(cur_token().value));
 
         next_token();
-        if (!expect_token(TokenType::COMMA, "Expected comma"))
+        if (!expect_token(TokenType::COMMA, "Expected `,`"))
             return;
 
         next_token();
@@ -307,7 +325,7 @@ namespace ir
         write_register(parse_register(cur_token().value));
 
         next_token();
-        if (!expect_token(TokenType::COMMA, "Expected comma"))
+        if (!expect_token(TokenType::COMMA, "Expected `,`"))
             return;
 
         next_token();
@@ -321,7 +339,7 @@ namespace ir
     void Generator::gen_movrm()
     {
         write_opcode(static_cast<uint8_t>(OpCode::MOVRM));
-        code.push_back(9); // 长度: 1字节寄存器+8字节地址
+        code.push_back(3);
 
         next_token();
         if (!expect_token(TokenType::REG, "Expected register"))
@@ -329,25 +347,11 @@ namespace ir
         write_register(parse_register(cur_token().value));
 
         next_token();
-        if (!expect_token(TokenType::COMMA, "Expected comma"))
+        if (!expect_token(TokenType::COMMA, "Expected `,`"))
             return;
 
         next_token();
-        if (!expect_token(TokenType::LEFT_BRACKET, "Expected '['"))
-            return;
-
-        next_token();
-        // 立即数地址
-        if (cur_token().type == TokenType::NUM) {
-            write_immediate(parse_immediate(cur_token().value));
-        } else {
-            errs["Expected register or number for address"] = ErrLevel::ERROR;
-            return;
-        }
-
-        next_token();
-        if (!expect_token(TokenType::RIGHT_BRACKET, "Expected ']'"))
-            return;
+        parse_and_write_reg_add_offest();
 
         next_token();
     }
@@ -355,27 +359,13 @@ namespace ir
     void Generator::gen_movmr()
     {
         write_opcode(static_cast<uint8_t>(OpCode::MOVMR));
-        code.push_back(9); // 长度: 8字节地址+1字节寄存器
+        code.push_back(3);
 
         next_token();
-        if (!expect_token(TokenType::LEFT_BRACKET, "Expected '['"))
-            return;
+        parse_and_write_reg_add_offest();
 
         next_token();
-        // 立即数地址
-        if (cur_token().type == TokenType::NUM) {
-            write_immediate(parse_immediate(cur_token().value));
-        } else {
-            errs["Expected register or number for address"] = ErrLevel::ERROR;
-            return;
-        }
-
-        next_token();
-        if (!expect_token(TokenType::RIGHT_BRACKET, "Expected ']'"))
-            return;
-
-        next_token();
-        if (!expect_token(TokenType::COMMA, "Expected comma"))
+        if (!expect_token(TokenType::COMMA, "Expected `,`"))
             return;
 
         next_token();
@@ -389,27 +379,13 @@ namespace ir
     void Generator::gen_movmi()
     {
         write_opcode(static_cast<uint8_t>(OpCode::MOVMI));
-        code.push_back(16); // 长度: 8字节地址 + 8字节立即数
+        code.push_back(10);
 
         next_token();
-        if (!expect_token(TokenType::LEFT_BRACKET, "Expected '['"))
-            return;
+        parse_and_write_reg_add_offest();
 
         next_token();
-        // 立即数地址
-        if (cur_token().type == TokenType::NUM) {
-            write_immediate(parse_immediate(cur_token().value));
-        } else {
-            errs["Expected register or number for address"] = ErrLevel::ERROR;
-            return;
-        }
-
-        next_token();
-        if (!expect_token(TokenType::RIGHT_BRACKET, "Expected ']'"))
-            return;
-
-        next_token();
-        if (!expect_token(TokenType::COMMA, "Expected comma"))
+        if (!expect_token(TokenType::COMMA, "Expected `,`"))
             return;
 
         next_token();
@@ -423,45 +399,17 @@ namespace ir
     void Generator::gen_movmm()
     {
         write_opcode(static_cast<uint8_t>(OpCode::MOVMM));
-        code.push_back(16); // 长度: 8字节源地址 + 8字节目标地址
+        code.push_back(4);
 
         next_token();
-        if (!expect_token(TokenType::LEFT_BRACKET, "Expected '['"))
+        parse_and_write_reg_add_offest();
+
+        next_token();
+        if (!expect_token(TokenType::COMMA, "Expected `,`"))
             return;
 
         next_token();
-        // 源地址
-        if (cur_token().type == TokenType::NUM) {
-            write_immediate(parse_immediate(cur_token().value));
-        } else {
-            errs["Expected register or number for source address"] = ErrLevel::ERROR;
-            return;
-        }
-
-        next_token();
-        if (!expect_token(TokenType::RIGHT_BRACKET, "Expected ']'"))
-            return;
-
-        next_token();
-        if (!expect_token(TokenType::COMMA, "Expected comma"))
-            return;
-
-        next_token();
-        if (!expect_token(TokenType::LEFT_BRACKET, "Expected '['"))
-            return;
-
-        next_token();
-        // 目标地址
-        if (cur_token().type == TokenType::NUM) {
-            write_immediate(parse_immediate(cur_token().value));
-        } else {
-            errs["Expected register or number for destination address"] = ErrLevel::ERROR;
-            return;
-        }
-
-        next_token();
-        if (!expect_token(TokenType::RIGHT_BRACKET, "Expected ']'"))
-            return;
+        parse_and_write_reg_add_offest();
 
         next_token();
     }
@@ -478,7 +426,7 @@ namespace ir
         write_register(parse_register(cur_token().value));
 
         next_token();
-        if (!expect_token(TokenType::COMMA, "Expected comma"))
+        if (!expect_token(TokenType::COMMA, "Expected `,`"))
             return;
 
         next_token();
@@ -492,7 +440,7 @@ namespace ir
     void Generator::gen_addm()
     {
         write_opcode(static_cast<uint8_t>(OpCode::ADDM));
-        code.push_back(9); // 长度: 1字节寄存器+8字节地址
+        code.push_back(3);
 
         next_token();
         if (!expect_token(TokenType::REG, "Expected register"))
@@ -500,25 +448,11 @@ namespace ir
         write_register(parse_register(cur_token().value));
 
         next_token();
-        if (!expect_token(TokenType::COMMA, "Expected comma"))
+        if (!expect_token(TokenType::COMMA, "Expected `,`"))
             return;
 
         next_token();
-        if (!expect_token(TokenType::LEFT_BRACKET, "Expected '['"))
-            return;
-
-        next_token();
-        // 立即数地址
-        if (cur_token().type == TokenType::NUM) {
-            write_immediate(parse_immediate(cur_token().value));
-        } else {
-            errs["Expected register or number for address"] = ErrLevel::ERROR;
-            return;
-        }
-
-        next_token();
-        if (!expect_token(TokenType::RIGHT_BRACKET, "Expected ']'"))
-            return;
+        parse_and_write_reg_add_offest();
 
         next_token();
     }
@@ -534,7 +468,7 @@ namespace ir
         write_register(parse_register(cur_token().value));
 
         next_token();
-        if (!expect_token(TokenType::COMMA, "Expected comma"))
+        if (!expect_token(TokenType::COMMA, "Expected `,`"))
             return;
 
         next_token();
@@ -557,7 +491,7 @@ namespace ir
         write_register(parse_register(cur_token().value));
 
         next_token();
-        if (!expect_token(TokenType::COMMA, "Expected comma"))
+        if (!expect_token(TokenType::COMMA, "Expected `,`"))
             return;
 
         next_token();
@@ -571,7 +505,7 @@ namespace ir
     void Generator::gen_subm()
     {
         write_opcode(static_cast<uint8_t>(OpCode::SUBM));
-        code.push_back(9); // 长度: 1字节寄存器+8字节地址
+        code.push_back(3);
 
         next_token();
         if (!expect_token(TokenType::REG, "Expected register"))
@@ -579,25 +513,11 @@ namespace ir
         write_register(parse_register(cur_token().value));
 
         next_token();
-        if (!expect_token(TokenType::COMMA, "Expected comma"))
+        if (!expect_token(TokenType::COMMA, "Expected `,`"))
             return;
 
         next_token();
-        if (!expect_token(TokenType::LEFT_BRACKET, "Expected '['"))
-            return;
-
-        next_token();
-        // 立即数地址
-        if (cur_token().type == TokenType::NUM) {
-            write_immediate(parse_immediate(cur_token().value));
-        } else {
-            errs["Expected register or number for address"] = ErrLevel::ERROR;
-            return;
-        }
-
-        next_token();
-        if (!expect_token(TokenType::RIGHT_BRACKET, "Expected ']'"))
-            return;
+        parse_and_write_reg_add_offest();
 
         next_token();
     }
@@ -613,7 +533,7 @@ namespace ir
         write_register(parse_register(cur_token().value));
 
         next_token();
-        if (!expect_token(TokenType::COMMA, "Expected comma"))
+        if (!expect_token(TokenType::COMMA, "Expected `,`"))
             return;
 
         next_token();
@@ -636,7 +556,7 @@ namespace ir
         write_register(parse_register(cur_token().value));
 
         next_token();
-        if (!expect_token(TokenType::COMMA, "Expected comma"))
+        if (!expect_token(TokenType::COMMA, "Expected `,`"))
             return;
 
         next_token();
@@ -650,7 +570,7 @@ namespace ir
     void Generator::gen_mulm()
     {
         write_opcode(static_cast<uint8_t>(OpCode::MULM));
-        code.push_back(9); // 长度: 1字节寄存器+8字节地址
+        code.push_back(3);
 
         next_token();
         if (!expect_token(TokenType::REG, "Expected register"))
@@ -658,25 +578,11 @@ namespace ir
         write_register(parse_register(cur_token().value));
 
         next_token();
-        if (!expect_token(TokenType::COMMA, "Expected comma"))
+        if (!expect_token(TokenType::COMMA, "Expected `,`"))
             return;
 
         next_token();
-        if (!expect_token(TokenType::LEFT_BRACKET, "Expected '['"))
-            return;
-
-        next_token();
-        // 立即数地址
-        if (cur_token().type == TokenType::NUM) {
-            write_immediate(parse_immediate(cur_token().value));
-        } else {
-            errs["Expected register or number for address"] = ErrLevel::ERROR;
-            return;
-        }
-
-        next_token();
-        if (!expect_token(TokenType::RIGHT_BRACKET, "Expected ']'"))
-            return;
+        parse_and_write_reg_add_offest();
 
         next_token();
     }
@@ -692,7 +598,7 @@ namespace ir
         write_register(parse_register(cur_token().value));
 
         next_token();
-        if (!expect_token(TokenType::COMMA, "Expected comma"))
+        if (!expect_token(TokenType::COMMA, "Expected `,`"))
             return;
 
         next_token();
@@ -715,7 +621,7 @@ namespace ir
         write_register(parse_register(cur_token().value));
 
         next_token();
-        if (!expect_token(TokenType::COMMA, "Expected comma"))
+        if (!expect_token(TokenType::COMMA, "Expected `,`"))
             return;
 
         next_token();
@@ -729,7 +635,7 @@ namespace ir
     void Generator::gen_divm()
     {
         write_opcode(static_cast<uint8_t>(OpCode::DIVM));
-        code.push_back(9); // 长度: 1字节寄存器 + 8字节地址
+        code.push_back(3);
 
         next_token();
         if (!expect_token(TokenType::REG, "Expected register"))
@@ -737,25 +643,11 @@ namespace ir
         write_register(parse_register(cur_token().value));
 
         next_token();
-        if (!expect_token(TokenType::COMMA, "Expected comma"))
+        if (!expect_token(TokenType::COMMA, "Expected `,`"))
             return;
 
         next_token();
-        if (!expect_token(TokenType::LEFT_BRACKET, "Expected '['"))
-            return;
-
-        next_token();
-        // 立即数地址
-        if (cur_token().type == TokenType::NUM) {
-            write_immediate(parse_immediate(cur_token().value));
-        } else {
-            errs["Expected register or number for address"] = ErrLevel::ERROR;
-            return;
-        }
-
-        next_token();
-        if (!expect_token(TokenType::RIGHT_BRACKET, "Expected ']'"))
-            return;
+        parse_and_write_reg_add_offest();
 
         next_token();
     }
@@ -771,7 +663,7 @@ namespace ir
         write_register(parse_register(cur_token().value));
 
         next_token();
-        if (!expect_token(TokenType::COMMA, "Expected comma"))
+        if (!expect_token(TokenType::COMMA, "Expected `,`"))
             return;
 
         next_token();
@@ -944,7 +836,7 @@ namespace ir
         write_register(parse_register(cur_token().value));
 
         next_token();
-        if (!expect_token(TokenType::COMMA, "Expected comma"))
+        if (!expect_token(TokenType::COMMA, "Expected `,`"))
             return;
 
         next_token();
@@ -969,7 +861,7 @@ namespace ir
         write_register(parse_register(cur_token().value));
 
         next_token();
-        if (!expect_token(TokenType::COMMA, "Expected comma"))
+        if (!expect_token(TokenType::COMMA, "Expected `,`"))
             return;
 
         next_token();
@@ -994,7 +886,7 @@ namespace ir
         write_register(parse_register(cur_token().value));
 
         next_token();
-        if (!expect_token(TokenType::COMMA, "Expected comma"))
+        if (!expect_token(TokenType::COMMA, "Expected `,`"))
             return;
 
         next_token();
@@ -1008,10 +900,14 @@ namespace ir
     void Generator::gen_newi()
     {
         write_opcode(static_cast<uint8_t>(OpCode::NEWI));
-        code.push_back(8); // 长度: 8字节大小
+        code.push_back(9);
+        next_token();
+        if (!expect_token(TokenType::REG, "need a register"))
+            return;
+        write_register(parse_register(cur_token().value));
 
         next_token();
-        if (!expect_token(TokenType::NUM, "Expected allocation size"))
+        if (!expect_token(TokenType::NUM, "Expected number"))
             return;
         write_immediate(parse_immediate(cur_token().value));
 
@@ -1114,8 +1010,9 @@ namespace ir
         next_token();
     }
 
-    bool Generator::saveToFile(const std::string &filename)
-    {
+    bool Generator::saveToFile(const std::string &filename) const {
+        if (!errs.empty())return false; //如果有语法错误直接返回
+
         std::ofstream file(filename, std::ios::binary);
         if (!file.is_open()) {
             std::cerr << "Failed to open file :" << filename << '\n';
@@ -1123,11 +1020,11 @@ namespace ir
         }
 
         // 写入魔数 "QTLM"
-        const char magic[] = {'Q', 'T', 'L', 'M'};
+        const auto magic = magic_num_char;
         file.write(magic, 4);
 
         // 写入版本 (当前版本1)
-        uint32_t version = 1;
+        uint32_t version = LMVM_DEV;
         file.write(reinterpret_cast<const char *>(&version), 4);
 
         // 写入入口点
