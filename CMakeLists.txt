@@ -45,8 +45,7 @@ add_executable(lmlc
         compiler/ir/ir_token.cpp
         compiler/ir/ir_generator.cpp
 
-        compiler/gen_lmir.cpp
         compiler/console.cpp
-        compiler/console.h
+
 
 )
