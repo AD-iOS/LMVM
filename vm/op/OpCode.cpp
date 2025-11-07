@@ -2,7 +2,7 @@
 // Created by geguj on 2025/10/12.
 //
 
-#include "OpCode.h"
+#include "../../include/OpCode.h"
 
 
 std::string OpCode2Str(OpCode op)

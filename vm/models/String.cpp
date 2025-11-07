@@ -27,7 +27,7 @@ void LmString::push(LmString& _Str2) {
 
 // 添加移动构造函数以提高性能
 LmString::LmString(LmString&& other) noexcept 
-    : LmObject(ObjectType::STRING),
+    : LmType(TypeKind::Array),
       m_value(other.m_value),
       size(other.size),
       length(other.length) {
@@ -37,7 +37,7 @@ LmString::LmString(LmString&& other) noexcept
     other.length = 0;
 }
 LmString::LmString(char* value):
-        LmObject(ObjectType::STRING),
+        LmType(TypeKind::Array),
         m_value(value),
         length(std::strlen(value)){
             auto remainder = length % 16;

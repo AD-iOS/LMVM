@@ -3,8 +3,8 @@
 //
 
 #pragma once
-#include "OpCode.h"
-#include "version.h"
+#include "../../include/OpCode.h"
+#include "../../include/version.h"
 #include <cstdint>
 #include <fstream>
 
@@ -15,7 +15,7 @@ class Loader {
         uint32_t version;
         uint64_t entry;
     };
-    Header h;
+    Header h{};
     std::ifstream m_file;
 public:
     Loader(const std::string& path);

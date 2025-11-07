@@ -6,18 +6,18 @@
 #include <memory>
 
 enum class ObjectType {
-    STRING,
-    INTEGER,
-    FLOAT,
+    TYPES,
     CALL_NATIVE
 };
 class LmObject {
-
+    ObjectType m_type;
 public:
-    LmObject(ObjectType type): m_type(type){}
+    explicit LmObject(ObjectType type): m_type(type){}
     virtual ~LmObject() = default;
 
-    ObjectType m_type;
+
 
     virtual void update_value(void* obj){}
+    virtual ObjectType get_object_type(){return m_type;}
+    virtual std::string get_object_type_str(){return "LmObject";}
 };

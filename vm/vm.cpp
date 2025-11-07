@@ -6,9 +6,10 @@
 #include "call/handler.h"
 #include "models/Integer.h"
 #include "models/String.h"
-#include "op/OpCode.h"
+#include "../include/OpCode.h"
 #include <cstdint>
 #include <iostream>
+#include <sstream>
 #include <memory>
 
 VirtualMachine::VirtualMachine(std::vector<Op> &program,char** args)
@@ -63,7 +64,7 @@ inline void VirtualMachine::execute(Op &op){
 
         if (
             const auto addr =
-                    std::static_pointer_cast<LmInteger>(
+                    std::dynamic_pointer_cast<LmInteger>(
                         heapManager->loadObject(reg[r] + offest)
                     )
         ) {
@@ -77,7 +78,7 @@ inline void VirtualMachine::execute(Op &op){
         const auto r1 = op.data[2];
         if (
             const auto addr =
-                    std::static_pointer_cast<LmInteger>(
+                    std::dynamic_pointer_cast<LmInteger>(
                         heapManager->loadObject(reg[r] + offest)
                     )
         ) {
@@ -92,13 +93,13 @@ inline void VirtualMachine::execute(Op &op){
         const auto offest2 = std::bit_cast<int8_t>(op.data[3]);
         if (
             const auto addr1 =
-                    std::static_pointer_cast<LmInteger>(
+                    std::dynamic_pointer_cast<LmInteger>(
                         heapManager->loadObject(reg[r1] + offest1)
                         )
         ) {
             if (
                 const auto addr2 =
-                        std::static_pointer_cast<LmInteger>(
+                        std::dynamic_pointer_cast<LmInteger>(
                             heapManager->loadObject(reg[r2] + offest2)
                         )
             ) {
@@ -126,7 +127,7 @@ inline void VirtualMachine::execute(Op &op){
         const auto offest1 = std::bit_cast<int8_t>(op.data[2]); //base + offest
         if (
             const auto addr1 =
-                    std::static_pointer_cast<LmInteger>(
+                    std::dynamic_pointer_cast<LmInteger>(
                         heapManager->loadObject(reg[r1] + offest1)
                         )
         ) {
@@ -153,7 +154,7 @@ inline void VirtualMachine::execute(Op &op){
         const auto offest1 = std::bit_cast<int8_t>(op.data[2]); //base + offest
         if (
             const auto addr1 =
-                    std::static_pointer_cast<LmInteger>(
+                    std::dynamic_pointer_cast<LmInteger>(
                         heapManager->loadObject(reg[r1] + offest1)
                         )
         ) {
@@ -362,40 +363,23 @@ void VirtualMachine::run(const size_t start)
 }
 
 void VirtualMachine::vmdbg() const {
-    bool quit = false;
     std::string t;
     while (true) {
         std::cout << "(debug) ";
         std::getline(std::cin,t);
-        switch (t[0]) {
-            case 'r': {
-                if (!t.substr(1).empty()) {
-                    std::string count;
-                    for (const auto& c : t.substr(1)) {
-                        if (std::isspace(c)) continue;
-                        count += c;
-                    }
-                    std::cout << "r" << count << " = " << reg[std::stoi(count)] << std::endl;
-                }
-                for (size_t i=0;i <= 15;i++) {
-                    std::cout << "r" << i << " = " << reg[i] << "\n";
-                }
-                std::cout << "sp = " << *sp << std::endl;
-                break;
-            }
-            case 'b': {
-                quit = true;
-                break;
-            }
-            case -1:case '\n':case '\t':case '\r':{break;}
-            case 'p': {
+        t += ' '; //补充空格避免无法捕获至undefined
+        for (std::stringstream ss(t);ss >> t;) {
+            if (t == "quit" || t == "q" || ss.eof() || t == "break" || t == "b" || t == "^C")return;
+            if (t == "echo" || t == "e") {
+                ss >> t;
+                if (t[0] == 'r')   std::cout << reg[std::stoll(t.substr(1))] << '\n';
+                else if (t == "sp")std::cout << *sp << '\n';
+                else               std::cout << heapManager->loadObject(std::stoull(t))->get_object_type_str() << '\n';
 
             }
-            default: {
-                std::cerr << "unknown: " << t << std::endl;
-                break;
-            }
+
+            else std::cerr <<"undefined: " << t << '\n';
+
         }
-        if (quit)return;
     }
 }

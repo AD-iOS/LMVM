@@ -3,7 +3,6 @@
 //
 
 #include "Loader.h"
-#include <iostream>
 
 Loader::Loader(const std::string& path) {
     m_file.open(path, std::ios::binary);
@@ -16,7 +15,7 @@ Loader::~Loader(){
     if(m_file.is_open())m_file.close();
 }
 
-bool Loader::check_header() { 
+bool Loader::check_header() {
     m_file.seekg(0, std::ios::beg);
     m_file.read(reinterpret_cast<char*>(&h), sizeof(h));
     if (m_file.gcount() != sizeof(h)){
@@ -26,25 +25,23 @@ bool Loader::check_header() {
     return h.magic_num == MAGIC && h.version == VERSION;
 }
 
-Op Loader::load_op() { 
+Op Loader::load_op() {
     Op op;
     op.op = static_cast<OpCode>(m_file.get());
     const auto data_size = m_file.get();
     op.data.resize(data_size);
     m_file.read(reinterpret_cast<char*>(op.data.data()), data_size);
 
-    return op;
+    return std::move(op);
 }
 
-std::vector<Op> Loader::load() { 
+std::vector<Op> Loader::load() {
     if (!check_header()) {
         throw std::runtime_error("Invalid header");
     }
     std::vector<Op> ops;
     for (size_t i = 0; m_file.peek() != EOF; i++) {
-
-        Op op = load_op();
-        ops.push_back(op);
+        ops.push_back(load_op());
     }
-    return ops;
+    return std::move(ops);
 }
