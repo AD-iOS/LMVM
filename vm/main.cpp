@@ -18,7 +18,7 @@ int main(const int argc, char **argv)
     auto code = loader.load();
     const auto entry = loader.entry();
 
-    VirtualMachine vm(code,argv);
+    VirtualMachine vm(code);
     const auto start = std::chrono::high_resolution_clock::now();
     try {
         vm.run(entry);
@@ -28,4 +28,5 @@ int main(const int argc, char **argv)
     const auto end = std::chrono::high_resolution_clock::now();
     const auto dur_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     std::cout << "Finish in " << dur_ms << std::endl;
+
 }
