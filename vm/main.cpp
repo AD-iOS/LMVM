@@ -19,13 +19,13 @@ int main(const int argc, char **argv)
     const auto entry = loader.entry();
 
     VirtualMachine vm(code);
-    const auto start = std::chrono::high_resolution_clock::now();
+    // const auto start = std::chrono::high_resolution_clock::now();
     try {
         vm.run(entry);
     } catch (const LmError &e) {
         std::cout << "Error: " << e.what() << std::endl;
     }
-    const auto end = std::chrono::high_resolution_clock::now();
-    const auto dur_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::cout << "Finish in " << dur_ms << std::endl;
+    // const auto end = std::chrono::high_resolution_clock::now();
+    // const auto dur_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    // std::cout << "Finish in " << dur_ms << std::endl;
 }
