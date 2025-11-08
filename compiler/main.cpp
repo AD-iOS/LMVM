@@ -23,8 +23,9 @@ int main(int argc,char *argv[]) {
     auto tokens = lexer.tokenize();
     ir::Generator gener(tokens);
     gener.build();
-    for (const auto &f: gener.errs | std::views::keys) {
+    for (const auto &[f,v]: gener.errs ) {
         std::cout << f << std::endl;
     }
     return gener.saveToFile(argv[2]);
 }
+
