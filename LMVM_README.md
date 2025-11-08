@@ -1,7 +1,7 @@
 # Lamina-VM 
 
 <div align="right">
-    <strong> 返回本倉庫的 README.md </strong> | <a href="README.md">
+    <a href="README.md"> 返回本倉庫的 README.md </a>
 </div>
 <br>
 

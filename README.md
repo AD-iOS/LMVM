@@ -4,7 +4,7 @@
 > 復刻者: AD
 
 <div align="right">
-    <strong> 原 Lamina-dev/LMVM 的 README.md </strong> | <a href="LMVM_README.md">
+    <a href="LMVM_README.md"> 原 Lamina-dev/LMVM 的 README.md </a>
 </div>
 <br>
 
