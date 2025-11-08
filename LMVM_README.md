@@ -1,5 +1,10 @@
 # Lamina-VM 
 
+<div align="right">
+    <strong> 返回本倉庫的 README.md </strong> | <a href="README.md">
+</div>
+<br>
+
 ## 目录
 - [特性]
 - [快速开始]

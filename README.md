@@ -3,6 +3,11 @@
 > 此倉庫復刻自 Lamina-dev/LMVM
 > 復刻者: AD
 
+<div align="right">
+    <strong> 原 Lamina-dev/LMVM 的 README.md </strong> | <a href="LMVM_README.md">
+</div>
+<br>
+
 ###### 前言
 ```text
 本倉庫復刻自 Lamina-dev/LMVM
@@ -13,10 +18,11 @@
 ## 目錄
 - [快速開始 - 在 Windows 上](#快速開始---在-windows-上)
 - [快速開始 - 在 iOS 上](#快速開始---在-ios-上)
+- [快速開始 - 在 UNIX/Linux/MacOS 上](#快速開始---在UNIX-Linux-MacOS上)
 - [架構設計](#架構設計)
-- [貢獻](#貢獻)
+<!-- - [貢獻](#貢獻) -->
 - [測試人員](#測試人員)
-- [許可證](#許可證)
+<!-- - [許可證](#許可證) -->
 
 ## 快速開始 - 在 Windows 上
 ```bat
@@ -43,6 +49,17 @@ ldid -S../entitlements/entitlements.plist bin/*
 ./lmvm hello.lmc
 ```
 
+## 快速開始 - 在 UNIX/Linux/MacOS 上
+```bash
+git clone https://github.com/Lamina-dev/LMVM.git
+cd LMVM
+mkdir -p build
+cd build
+cmake ..
+make
+./lmlc ../../test/hello.lmi hello.lmc
+./lmvm hello.lmc
+
 ## 架構設計
 採用了 ``類Intel X86指令集`` 指令後綴，使用 ``imm(i),mem(m),reg(r)`` 來表示指令參數 
 分為雙後綴（例如movrr,movrm）和單後綴指令（例如addr,addi）
@@ -61,7 +78,7 @@ ldid -S../entitlements/entitlements.plist bin/*
 ## 許可證
 
 ## 注意事項
-1. vm/main.cpp，如果因為平台問題無法編譯，嘗試刪除掉計時（chrono）相關代碼
+1. vm/main.cpp，如果因為平台問題無法編譯，嘗試刪除掉計時（chrono）相關代碼(本復刻倉庫已默認注釋掉)
 
 ---
 
