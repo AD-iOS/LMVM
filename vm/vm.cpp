@@ -12,8 +12,8 @@
 #include <sstream>
 #include <memory>
 
-VirtualMachine::VirtualMachine(std::vector<Op> &program,char** args)
-    : program(program), args(args),// 初始化堆管理器
+VirtualMachine::VirtualMachine(std::vector<Op> &program)
+    : program(program), 
       pc(0), heapManager(std::make_unique<HeapManager>(128))
 {
     memset(reg, 0, sizeof(reg));
@@ -382,4 +382,5 @@ void VirtualMachine::vmdbg() const {
 
         }
     }
+
 }
