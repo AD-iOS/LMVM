@@ -7,7 +7,7 @@ const char* Console::lm_options[] = {
     "help","compile", "run", "debug"
 };
 Console::Console(const int argc, char **argv) {
-    for (size_t i = 0; i < sizeof(lm_options); i++) {
+    for (size_t i = 0; i < (sizeof(lm_options) / sizeof(lm_options[0])); i++) {
         if (lm_options[i] == argv[1]) option = lm_options[i];
     }
     for (size_t i = 0; i < argc; i++) {
@@ -19,6 +19,6 @@ Console::Console(const int argc, char **argv) {
     if (option.empty()) option = lm_options[2]; //无则为运行
 }
 
-void Console::compile_ir2bc() {
+void Console::compile_ir2bc(std::string& path) {
 
 }

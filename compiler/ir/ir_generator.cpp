@@ -25,8 +25,7 @@ namespace ir
         str.erase(str.begin(), left);
     }
 
-    Generator::Generator(std::vector<Token> &tokens) : pos(0), tokens(tokens)
-    {
+    Generator::Generator(std::vector<Token> &tokens) : pos(0), opCount(0), tokens(tokens) {
     }
 
     Generator::~Generator() = default;

@@ -14,10 +14,10 @@
   .\lmvm.exe ./hello.lmc
   ```
 - [架构设计]<br>
-  采用了类Intel X86指令集<br>
-  指令后缀，使用imm(i),mem(m),reg(r)来表示指令参数<br>
+  采用了``类Intel X86指令集``<br>
+  指令后缀，使用``imm(i),mem(m),reg(r)``来表示指令参数<br>
   分为双后缀（例如movrr,movrm）和单后缀指令（例如addr,addi）<br>
-  全局64位寻址模式，有r0-r254的8字节寄存器和heap<br>
+  全局64位寻址模式，有``r0-r254``的8字节寄存器和heap<br>
 - [贡献]
 - [许可证]
 

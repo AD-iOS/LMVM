@@ -1,14 +1,14 @@
 #include "handler.h"
-#include <cstdlib>
+#include "../error/error.h"
 #include <iostream>
 #include <cstdio>
 #include "../vm.h"
-#include "../models/String.h"
+#include "../models/string.h"
 
 void Handler::Lm_io_write(VirtualMachine* vm){
 
-    if (const auto address = std::dynamic_pointer_cast<LmString>(
-        vm->heapManager->
+    if (const auto address = dynamic_cast<lm::LmString*>(
+        vm->heapManager.
         loadObject(vm->reg[3])
     ))fputs(address->to_ctype(),stdout);
 
@@ -16,10 +16,9 @@ void Handler::Lm_io_write(VirtualMachine* vm){
 }
 void Handler::Lm_io_read(VirtualMachine* vm){
 
-    if (const auto address = std::dynamic_pointer_cast<LmString>(
-        vm->heapManager->
-        loadObject(vm->reg[3])
-    ))fgets(address->to_ctype(),1024,stdin);
+    if (const auto address = dynamic_cast<lm::LmString*>(
+        vm->heapManager.
+        loadObject(vm->reg[3])))fgets(address->to_ctype(),1024,stdin);
     
     throw LmError("vmcall[read] Error: pointer is not LmString");
     

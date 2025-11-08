@@ -4,8 +4,9 @@
 
 #pragma once
 #include <cstdint>
-#include "heap.h"
 #include "../include/OpCode.h"
+#include "gc/gc_manager.h"
+#include "models/models.h"
 constexpr size_t reg_num = 255;
 
 class VirtualMachine {
@@ -23,10 +24,9 @@ class VirtualMachine {
     inline void vmdbg() const;
 public:
     int64_t reg[reg_num + 1]{};
-    std::unique_ptr<HeapManager> heapManager;
+    lm::GCHeapManager heapManager;
 
-    VirtualMachine(std::vector<Op>& program);
-    VirtualMachine(const char* argc, char* argv[]);
+    explicit VirtualMachine(std::vector<Op>& program);
     ~VirtualMachine() = default;
     void run(size_t start);
     void loadProgram(const std::vector<Op>& program) const {

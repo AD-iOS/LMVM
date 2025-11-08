@@ -28,5 +28,4 @@ int main(const int argc, char **argv)
     const auto end = std::chrono::high_resolution_clock::now();
     const auto dur_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     std::cout << "Finish in " << dur_ms << std::endl;
-
 }

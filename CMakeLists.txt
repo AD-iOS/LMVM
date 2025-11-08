@@ -21,32 +21,12 @@ endif()
 
 include_directories(include)
 
+file(GLOB_RECURSE lmvm_src vm/*.cpp vm/*/*.cpp)
 add_executable(lmvm 
-        vm/main.cpp
-        vm/vm.cpp
-
-        vm/models/Object.cpp
-        vm/models/Integer.cpp
-        vm/models/Float.cpp
-        vm/models/String.cpp
-
-        vm/heap.cpp
-
-        vm/op/OpCode.cpp
-        vm/op/Loader.cpp
-        
-        vm/call/handler.cpp
-        vm/models/Types.cpp
-        vm/models/Types.h
+        ${lmvm_src}
 )
 
+file(GLOB_RECURSE lmlc_src compiler/*.cpp compiler/*/*.cpp)
 add_executable(lmlc
-        compiler/main.cpp
-        compiler/ir/ir_token.cpp
-        compiler/ir/ir_generator.cpp
-
-        compiler/console.cpp
-
-
+        ${lmlc_src}
 )
-

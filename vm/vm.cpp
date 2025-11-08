@@ -3,22 +3,29 @@
 //
 
 #include "vm.h"
+
+#include <bit>
+
+#include "error/error.h"
 #include "call/handler.h"
-#include "models/Integer.h"
-#include "models/String.h"
+#include "models/models.h"
 #include "../include/OpCode.h"
 #include <cstdint>
+#include <cstring>
 #include <iostream>
 #include <sstream>
 #include <memory>
 
 VirtualMachine::VirtualMachine(std::vector<Op> &program)
-    : program(program), 
-      pc(0), heapManager(std::make_unique<HeapManager>(128))
+    : program(program),// 初始化堆管理器
+      pc(0)
 {
-    memset(reg, 0, sizeof(reg));
+    std::memset(reg, 0, sizeof(reg));
     sp = reinterpret_cast<size_t*>(reg + reg_num);
 }
+
+
+
 #define op_data_mem(offest) (*reinterpret_cast<uint64_t*>(op.data.data() + offest))
 #define op_data_imm(offest) (*reinterpret_cast< int64_t*>(op.data.data() + offest))
 
@@ -42,12 +49,13 @@ inline void VirtualMachine::execute(Op &op){
 
         if(
             const auto addr =
-            std::dynamic_pointer_cast<LmInteger>(
-                heapManager->loadObject(reg[r] + offest)
-                )
+            dynamic_cast<lm::LmInteger*>(
+                        heapManager.loadObject(reg[r] + offest)
+                        )
             ){
             reg[r1] = add_signed(addr->to_ctype());
         }
+
         break;
     }
     case OpCode::MOVRR: {
@@ -64,11 +72,11 @@ inline void VirtualMachine::execute(Op &op){
 
         if (
             const auto addr =
-                    std::dynamic_pointer_cast<LmInteger>(
-                        heapManager->loadObject(reg[r] + offest)
-                    )
+            dynamic_cast<lm::LmInteger*>(
+                heapManager.loadObject(reg[r] + offest)
+                )
         ) {
-            addr->update_value(op.data.data() + 2);
+            addr->update_value(reinterpret_cast<int64_t>(op.data.data() + 2));
         }
         break;
     }
@@ -78,9 +86,9 @@ inline void VirtualMachine::execute(Op &op){
         const auto r1 = op.data[2];
         if (
             const auto addr =
-                    std::dynamic_pointer_cast<LmInteger>(
-                        heapManager->loadObject(reg[r] + offest)
-                    )
+            dynamic_cast<lm::LmInteger*>(
+                heapManager.loadObject(reg[r] + offest)
+                )
         ) {
             addr->update_value(reg[r1]);
         }
@@ -93,17 +101,17 @@ inline void VirtualMachine::execute(Op &op){
         const auto offest2 = std::bit_cast<int8_t>(op.data[3]);
         if (
             const auto addr1 =
-                    std::dynamic_pointer_cast<LmInteger>(
-                        heapManager->loadObject(reg[r1] + offest1)
-                        )
+            dynamic_cast<lm::LmInteger*>(
+                heapManager.loadObject(reg[r1] + offest1)
+                )
         ) {
             if (
                 const auto addr2 =
-                        std::dynamic_pointer_cast<LmInteger>(
-                            heapManager->loadObject(reg[r2] + offest2)
-                        )
+                dynamic_cast<lm::LmInteger*>(
+                heapManager.loadObject(reg[r2] + offest2)
+                )
             ) {
-                addr1->update_value(addr2->get_ptr());
+                addr1->update_value(addr2->to_ctype());
             }
         }
         break;
@@ -127,9 +135,9 @@ inline void VirtualMachine::execute(Op &op){
         const auto offest1 = std::bit_cast<int8_t>(op.data[2]); //base + offest
         if (
             const auto addr1 =
-                    std::dynamic_pointer_cast<LmInteger>(
-                        heapManager->loadObject(reg[r1] + offest1)
-                        )
+            dynamic_cast<lm::LmInteger*>(
+                heapManager.loadObject(reg[r1] + offest1)
+                )
         ) {
             reg[r] += add_signed(addr1->to_ctype());
         }
@@ -154,9 +162,9 @@ inline void VirtualMachine::execute(Op &op){
         const auto offest1 = std::bit_cast<int8_t>(op.data[2]); //base + offest
         if (
             const auto addr1 =
-                    std::dynamic_pointer_cast<LmInteger>(
-                        heapManager->loadObject(reg[r1] + offest1)
-                        )
+            dynamic_cast<lm::LmInteger*>(
+                heapManager.loadObject(reg[r1] + offest1)
+                )
         ) {
             reg[r] -= add_signed(addr1->to_ctype());
         }
@@ -181,9 +189,9 @@ inline void VirtualMachine::execute(Op &op){
         const auto offest1 = std::bit_cast<int8_t>(op.data[2]); //base + offest
         if (
             const auto addr1 =
-                    std::static_pointer_cast<LmInteger>(
-                        heapManager->loadObject(reg[r1] + offest1)
-                        )
+            dynamic_cast<lm::LmInteger*>(
+                heapManager.loadObject(reg[r1] + offest1)
+                )
         ) {
             reg[r] *= add_signed(addr1->to_ctype());
         }
@@ -208,8 +216,8 @@ inline void VirtualMachine::execute(Op &op){
         const auto offest1 = std::bit_cast<int8_t>(op.data[2]); //base + offest
         if (
             const auto addr1 =
-                    std::static_pointer_cast<LmInteger>(
-                        heapManager->loadObject(reg[r1] + offest1)
+                    dynamic_cast<lm::LmInteger*>(
+                        heapManager.loadObject(reg[r1] + offest1)
                         )
         ) {
             reg[r] /= add_signed(addr1->to_ctype());
@@ -220,7 +228,7 @@ inline void VirtualMachine::execute(Op &op){
         const auto r = op.data[0];
 
         reg[r] = static_cast<int64_t>(
-            heapManager->storeObject(std::make_shared<LmInteger>(op_data_imm(1)))
+            heapManager.create_integer(op_data_imm(1))
             ); // 返回堆地址
         break;
     }
@@ -228,7 +236,7 @@ inline void VirtualMachine::execute(Op &op){
         const auto r = op.data[0];
 
         reg[r] = static_cast<int64_t>(
-            heapManager->storeObject(std::make_shared<LmString>(reinterpret_cast<char *>(op.data.data() + 1)) )
+            heapManager.create_string(reinterpret_cast<char*>(op.data.data() + 1))
             );
         break;
     }
@@ -374,13 +382,9 @@ void VirtualMachine::vmdbg() const {
                 ss >> t;
                 if (t[0] == 'r')   std::cout << reg[std::stoll(t.substr(1))] << '\n';
                 else if (t == "sp")std::cout << *sp << '\n';
-                else               std::cout << heapManager->loadObject(std::stoull(t))->get_object_type_str() << '\n';
-
             }
 
             else std::cerr <<"undefined: " << t << '\n';
-
         }
     }
-
 }
