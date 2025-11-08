@@ -1,6 +1,7 @@
 # Lamina-VM
 
 > 此倉庫復刻自 Lamina-dev/LMVM
+<br>
 > 復刻者: AD
 
 <div align="right">
@@ -18,10 +19,10 @@
 ## 目錄
 - [快速開始 - 在 Windows 上](#快速開始---在-windows-上)
 - [快速開始 - 在 iOS 上](#快速開始---在-ios-上)
-- [快速開始 - 在 UNIX/Linux/MacOS 上](#快速開始---在UNIX-Linux-MacOS上)
+- [快速開始 - 在 UNIX or Linux or MacOS 上](#快速開始---在UNIX-Linux-MacOS上)
 - [架構設計](#架構設計)
-<!-- - [貢獻](#貢獻) -->
 - [測試人員](#測試人員)
+<!-- - [貢獻](#貢獻) -->
 <!-- - [許可證](#許可證) -->
 
 ## 快速開始 - 在 Windows 上
@@ -49,7 +50,7 @@ ldid -S../entitlements/entitlements.plist bin/*
 ./lmvm hello.lmc
 ```
 
-## 快速開始 - 在 UNIX/Linux/MacOS 上
+## 快速開始 - 在 UNIX or Linux or MacOS 上
 ```bash
 git clone https://github.com/Lamina-dev/LMVM.git
 cd LMVM
