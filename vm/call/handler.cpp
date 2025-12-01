@@ -10,7 +10,10 @@ void Handler::Lm_io_write(VirtualMachine* vm){
     if (const auto address = dynamic_cast<lm::LmString*>(
         vm->heapManager.
         loadObject(vm->reg[3])
-    ))fputs(address->to_ctype(),stdout);
+    )){
+        fputs(address->to_ctype(),stdout);
+        return;
+    }
 
     throw LmError("vmcall[write] Error: pointer is not LmString");
 }
@@ -18,7 +21,10 @@ void Handler::Lm_io_read(VirtualMachine* vm){
 
     if (const auto address = dynamic_cast<lm::LmString*>(
         vm->heapManager.
-        loadObject(vm->reg[3])))fgets(address->to_ctype(),1024,stdin);
+        loadObject(vm->reg[3]))){
+    fgets(address->to_ctype(),1024,stdin);
+        return;
+    }
     
     throw LmError("vmcall[read] Error: pointer is not LmString");
     
